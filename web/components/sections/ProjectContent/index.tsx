@@ -1,0 +1,30 @@
+'use client';
+
+import { useState } from "react";
+
+import { Header } from "@/components/header";
+import { SideBar } from "@/components/sideBar";
+import { ConclusionGraphs } from "./conclusionGraphs";
+import { ListTasks } from "./listTasks";
+import { ChatBtn } from "./chatBtn";
+
+export function ProjectContent() {
+    const [isSideBarOpen, setIsSideBarOpen] = useState(false);
+
+    return (
+        <>
+            <div className="flex items-start w-full min-h-screen">
+                <SideBar isSideBarOpen = {isSideBarOpen} setIsSideBarOpen = {setIsSideBarOpen} />
+
+                <main className="ml-0 lg:ml-64 flex-1">
+                    <Header setIsSideBarOpen = {setIsSideBarOpen} />
+                    <div className="p-3 lg:p-10">
+                        <ConclusionGraphs />
+                        <ListTasks />
+                    </div>
+                </main>
+            </div>
+            <ChatBtn />
+        </>
+    )
+}

@@ -58,17 +58,17 @@ export function SideBar({ isSideBarOpen, setIsSideBarOpen }:SideBarProps) {
         </nav>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <button className="w-full bg-[#1F108E] hover:bg-[#100752] text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-md transition-all">
+      {/* <div className="flex flex-col gap-4"> */}
+        {/* <button className="w-full bg-[#1F108E] hover:bg-[#100752] text-white rounded-xl py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold shadow-md transition-all">
           <PlusCircle className="w-4 h-4" />
           Novo Projeto
-        </button>
+        </button> */}
 
         <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-xl transition-all w-fit">
           <LogOut className="w-4 h-4" />
           Sair
         </button>
-      </div>
+      {/* </div> */}
     </aside>
   );
 }
