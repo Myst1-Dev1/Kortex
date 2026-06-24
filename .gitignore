@@ -1,0 +1,74 @@
+# ==========================================
+# Dependências e Pacotes (Ambos)
+# ==========================================
+node_modules/
+jspm_packages/
+.pnpm-store/
+.yarn/
+*.log
+*.log.*
+yarn-error.log
+pnpm-debug.log
+
+# ==========================================
+# Next.js (Front-end)
+# ==========================================
+.next/
+out/
+.docusaurus/
+.turbo/
+
+# Arquivos de cobertura de testes do Next (se usar Jest/Cypress)
+coverage/
+.nyc_output/
+.cypress/
+
+# ==========================================
+# NestJS (Back-end)
+# ==========================================
+dist/
+build/
+.swc/
+
+# Arquivos TypeScript e build caches
+*.tsbuildinfo
+
+# ==========================================
+# Variáveis de Ambiente (Segurança!)
+# ==========================================
+# Ignora arquivos de env reais, mas NÃO os exemplos (.env.example)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.production
+
+# ==========================================
+# Ferramentas e Containers (Docker, Prisma, etc.)
+# ==========================================
+# Se você usa Docker para subir o banco ou os apps
+.docker/
+docker-compose.override.yml
+
+# Se usar Prisma no NestJS
+/prisma/*.db
+/prisma/*.db-journal
+
+# ==========================================
+# Sistema Operacional e IDEs
+# ==========================================
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
+
+# VS Code e WebStorm
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
