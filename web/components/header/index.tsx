@@ -20,15 +20,7 @@ export function Header({ setIsSideBarOpen }:HeaderProps) {
                             ? 
                             <h2 className="text-xl font-semibold">Painel</h2> 
                             :
-
-                            path === '/project/1'
-                            ?
-                            <div className="space-y-1">
-                                <h1 className="text-base lg:text-2xl font-bold text-gray-800">Redesign Web App</h1>
-                                <p className="text-xs lg:text-base font-normal text-gray-500">Detalhes e acompanhamento do projeto principal.</p>
-                            </div>
-                            :
-                            'Null'
+                           ''
                         }
                     </div>
                     <div className="shrink-0 flex items-center gap-5">
