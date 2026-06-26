@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 export class GatewayController {
   constructor(
     @Inject('AUTH_CLIENT') private readonly authClient: ClientProxy,
+    @Inject('MEDIA_CLIENT') private readonly mediaClient: ClientProxy,
   ) {}
 
   @Get('/health')
@@ -32,9 +33,12 @@ export class GatewayController {
       }
     };
 
-    const [auth] = await Promise.all([ping('auth', this.authClient)]);
+    const [auth, media] = await Promise.all([
+      ping('auth', this.authClient),
+      ping('media', this.mediaClient),
+    ]);
 
-    const ok = [auth].every((s) => s.ok);
+    const ok = [auth, media].every((s) => s.ok);
 
     return {
       ok,
@@ -44,6 +48,7 @@ export class GatewayController {
       },
       services: {
         auth,
+        media,
       },
     };
   }

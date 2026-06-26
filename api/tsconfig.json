@@ -21,6 +21,13 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "paths": {}
+    "paths": {
+      "@kortex/redis": [
+        "libs/redis/src"
+      ],
+      "@kortex/redis/*": [
+        "libs/redis/src/*"
+      ]
+    }
   }
 }
