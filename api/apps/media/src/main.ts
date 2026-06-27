@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Logger } from '@nestjs/common/services/logger.service';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';

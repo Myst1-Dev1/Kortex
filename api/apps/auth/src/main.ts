@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { NestFactory } from '@nestjs/core';
 import { AuthModule } from './auth.module';
 import { Logger } from '@nestjs/common/services/logger.service';

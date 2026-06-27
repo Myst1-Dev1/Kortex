@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AuthController } from './auth.controller';
+import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
+    MediaModule,
     ClientsModule.register([
       {
         name: 'AUTH_CLIENT',
@@ -17,7 +20,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
       },
     ]),
   ],
-  controllers: [],
+  controllers: [AuthController],
   providers: [],
   exports: [ClientsModule],
 })

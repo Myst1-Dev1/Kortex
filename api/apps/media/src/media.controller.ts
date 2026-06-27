@@ -9,15 +9,15 @@ interface UploadMediaPayload {
 
 @Controller()
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(private readonly mediaService: MediaService) { }
 
   @MessagePattern('service.ping')
   ping() {
     return this.mediaService.ping();
   }
 
-  @MessagePattern('upload_media')
-  upload(@Payload() payload: UploadMediaPayload) {
-    return this.mediaService.upload(payload.buffer, payload.extension);
+  @MessagePattern('media.uploadMedia')
+  async handleUploadMedia(@Payload() data: { bufferBase64: string; extension: string }) {
+    return this.mediaService.upload(data.bufferBase64, data.extension);
   }
 }

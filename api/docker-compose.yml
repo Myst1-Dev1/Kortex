@@ -1,0 +1,156 @@
+version: '3.9'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kortex_gateway
+
+    command: npm run start:gateway
+
+    restart: always
+
+    ports:
+      - '4002:4002'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    env_file:
+      - .env
+
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+    networks:
+      - kortex_network
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kortex_auth
+
+    command: npm run start:auth
+
+    restart: always
+
+    ports:
+      - '4003:4003'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    env_file:
+      - .env
+
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+    networks:
+      - kortex_network
+
+  media:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kortex_media
+
+    command: npm run start:media
+
+    restart: always
+
+    ports:
+      - '4004:4004'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    env_file:
+      - .env
+
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+    networks:
+      - kortex_network
+
+  postgres:
+    image: postgres:16-alpine
+
+    container_name: kortex_postgres
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kortex
+
+    ports:
+      - '5432:5432'
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    networks:
+      - kortex_network
+  redis:
+    image: redis:7-alpine
+
+    container_name: kortex_redis
+
+    restart: always
+
+    ports:
+      - '6379:6379'
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - kortex_network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+
+    container_name: kortex_rabbitmq
+
+    restart: always
+
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    networks:
+      - kortex_network
+
+networks:
+  kortex_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
