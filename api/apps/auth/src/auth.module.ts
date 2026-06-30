@@ -7,11 +7,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
-import { User } from './users/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
     UsersModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({

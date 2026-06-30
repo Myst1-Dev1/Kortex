@@ -1,0 +1,41 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { IParticipants, ITasks } from '../interfaces/project-interfaces';
+
+@Entity('projects')
+export class Projects {
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
+
+    @Column({ type: 'uuid', name: 'author_id' })
+    authorId!: string;
+
+    @Column({ type: 'varchar', length: 255 })
+    name!: string;
+
+    @Column({ type: 'varchar', length: 255 })
+    description!: string;
+
+    @Column({ type: 'timestamp', name: 'deadline_for_completion' })
+    deadline_for_completion!: Date;
+
+    @Column('jsonb', { nullable: true, default: () => "'[]'" })
+    participants!: IParticipants[];
+
+    @Column('jsonb', { nullable: true, default: () => "'[]'" })
+    tasks!: ITasks[];
+
+    @Column({ type: 'varchar', nullable: true, name: 'project_image' })
+    projectImage!: string | null;
+
+    @CreateDateColumn({ name: 'created_at' })
+    createdAt!: Date;
+
+    @UpdateDateColumn({ name: 'updated_at' })
+    updatedAt!: Date;
+}
