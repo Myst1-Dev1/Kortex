@@ -14,6 +14,9 @@ import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { firstValueFrom } from 'rxjs';
 import type { Express } from 'express';
+import { SignUpDto } from './dto/signUpDto';
+import { SignInDto } from './dto/signInDto';
+import { RefreshTokenDto } from './dto/refreshTokenDto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,11 +34,7 @@ export class AuthController {
     @UploadedFile() avatar: Express.Multer.File,
 
     @Body()
-    body: {
-      name: string;
-      email: string;
-      password: string;
-    },
+    body: SignUpDto
   ) {
     let avatarUrl: string | null = null;
 
@@ -60,6 +59,31 @@ export class AuthController {
         email: body.email,
         password: body.password,
         avatarUrl,
+      }),
+    );
+  }
+
+  @Post('sign-in')
+  async signIn(
+    @Body()
+    body: SignInDto
+  ) {
+    return firstValueFrom(
+      this.authClient.send('auth.signIn', {
+        email: body.email,
+        password: body.password,
+      }),
+    );
+  }
+
+  @Post('refresh-token')
+  async refreshToken(
+    @Body()
+    body: RefreshTokenDto
+  ) {
+    return firstValueFrom(
+      this.authClient.send('auth.refreshToken', {
+        refreshToken: body.refreshToken,
       }),
     );
   }

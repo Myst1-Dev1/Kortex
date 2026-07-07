@@ -59,6 +59,35 @@ services:
     networks:
       - kortex_network
 
+  projects:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kortex_projects
+
+    command: npm run start:projects
+
+    restart: always
+
+    ports:
+      - '4005:4005'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    env_file:
+      - .env
+
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+    networks:
+      - kortex_network
+
   media:
     build:
       context: .

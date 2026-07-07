@@ -1,6 +1,7 @@
 export interface IParticipants {
   id: string;
   name: string;
+  email: string;
   avatarUrl: string;
 }
 
@@ -13,6 +14,18 @@ export interface ITasks {
     status: string;
     timeEstimated: Date;
     timeConcluded: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IProject {
+    id: string;
+    author_id: string;
+    name: string;
+    description: string;
+    status: string;
+    participants: IParticipants[];
+    tasks: ITasks[];
     createdAt: Date;
     updatedAt: Date;
 }

@@ -30,9 +30,6 @@ export class Projects {
     @Column('jsonb', { nullable: true, default: () => "'[]'" })
     tasks!: ITasks[];
 
-    @Column({ type: 'varchar', nullable: true, name: 'project_image' })
-    projectImage!: string | null;
-
     @CreateDateColumn({ name: 'created_at' })
     createdAt!: Date;
 

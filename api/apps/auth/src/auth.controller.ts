@@ -1,9 +1,7 @@
-import { Body, Controller } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { MessagePattern } from '@nestjs/microservices';
-import { SignUpDto } from './dto/signUpDto';
-import { SignInDto } from './dto/signInDto';
-import { RefreshTokenDto } from './dto/refreshTokenDto';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { RefreshTokenResponse, SignInResponse, SignUpResponse } from './interfaces/auth-interfaces';
 
 @Controller()
 export class AuthController {
@@ -15,17 +13,17 @@ export class AuthController {
   }
 
   @MessagePattern('auth.signUp')
-  signUp(@Body() dto: SignUpDto) {
+  signUp(@Payload() dto: SignUpResponse) {
     return this.authService.signUp(dto);
   }
 
   @MessagePattern('auth.signIn')
-  signIn(@Body() dto: SignInDto) {
+  signIn(@Payload() dto: SignInResponse) {
     return this.authService.signIn(dto);
   }
 
   @MessagePattern('auth.refreshToken')
-  refreshToken(@Body() dto: RefreshTokenDto) {
+  refreshToken(@Payload() dto: RefreshTokenResponse) {
     return this.authService.refreshToken(dto);
   }
 }

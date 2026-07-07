@@ -9,6 +9,7 @@ export class GatewayController {
   constructor(
     @Inject('AUTH_CLIENT') private readonly authClient: ClientProxy,
     @Inject('MEDIA_CLIENT') private readonly mediaClient: ClientProxy,
+    @Inject('PROJECTS_CLIENT') private readonly projectsClient: ClientProxy,
   ) {}
 
   @Get('/health')
@@ -33,12 +34,13 @@ export class GatewayController {
       }
     };
 
-    const [auth, media] = await Promise.all([
+    const [auth, media, projects] = await Promise.all([
       ping('auth', this.authClient),
       ping('media', this.mediaClient),
+      ping('projects', this.projectsClient),
     ]);
 
-    const ok = [auth, media].every((s) => s.ok);
+    const ok = [auth, media, projects].every((s) => s.ok);
 
     return {
       ok,
@@ -49,6 +51,7 @@ export class GatewayController {
       services: {
         auth,
         media,
+        projects,
       },
     };
   }

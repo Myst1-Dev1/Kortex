@@ -12,11 +12,9 @@ import { RedisService } from '../../../libs/redis/src/redis.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users/user.entity';
-import { SignUpDto } from './dto/signUpDto';
-import { SignInDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
-import { RefreshTokenDto } from './dto/refreshTokenDto';
+import { RefreshTokenResponse, SignInResponse, SignUpResponse } from './interfaces/auth-interfaces';
 
 @Injectable()
 export class AuthService {
@@ -63,7 +61,7 @@ export class AuthService {
     };
   }
 
-  async signUp(dto: SignUpDto) {
+  async signUp(dto: SignUpResponse) {
     const userAlreadyExists = await this.userRepository.findOne({
       where: {
         email: dto.email,
@@ -97,7 +95,7 @@ export class AuthService {
     };
   }
 
-  async signIn(dto: SignInDto) {
+  async signIn(dto: SignInResponse) {
     const user = await this.userRepository.findOne({
       where: {
         email: dto.email,
@@ -126,7 +124,7 @@ export class AuthService {
     };
   }
 
-  async refreshToken(dto: RefreshTokenDto) {
+  async refreshToken(dto: RefreshTokenResponse) {
     const payload = await this.jwtService.verifyAsync(dto.refreshToken, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
     });
