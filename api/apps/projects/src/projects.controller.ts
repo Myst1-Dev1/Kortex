@@ -23,7 +23,7 @@ export class ProjectsController {
   }
 
   @MessagePattern('projects.getById')
-  getProjectById(@Payload('id') data: { id: string }) {
+  getProjectById(@Payload() data: { id: string }) {
     return this.projectsService.getProjectById(data.id);
   }
 
@@ -33,7 +33,7 @@ export class ProjectsController {
   }
 
   @MessagePattern('projects.delete')
-  deleteProject(@Payload('id') data: { id: string }) {
+  deleteProject(@Payload() data: { id: string }) {
     return this.projectsService.deleteProject(data.id);
   }
 

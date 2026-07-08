@@ -11,6 +11,10 @@ class ParticipantDto {
     name!: string;
 
     @IsString()
+    @IsNotEmpty()
+    email!: string;
+
+    @IsString()
     @IsOptional()
     avatarUrl!: string | null;
 }

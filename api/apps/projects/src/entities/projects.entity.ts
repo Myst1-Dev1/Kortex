@@ -13,7 +13,7 @@ export class Projects {
     id!: string;
 
     @Column({ type: 'uuid', name: 'author_id' })
-    authorId!: string;
+    author_id!: string;
 
     @Column({ type: 'varchar', length: 255 })
     name!: string;
