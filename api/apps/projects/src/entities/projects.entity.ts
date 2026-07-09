@@ -5,7 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IParticipants, ITasks } from '../interfaces/project-interfaces';
+import { IParticipants } from '../interfaces/project-interfaces';
 
 @Entity('projects')
 export class Projects {
@@ -26,9 +26,6 @@ export class Projects {
 
     @Column('jsonb', { nullable: true, default: () => "'[]'" })
     participants!: IParticipants[];
-
-    @Column('jsonb', { nullable: true, default: () => "'[]'" })
-    tasks!: ITasks[];
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt!: Date;

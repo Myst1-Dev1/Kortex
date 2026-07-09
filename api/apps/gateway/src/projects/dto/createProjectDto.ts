@@ -72,12 +72,6 @@ export class CreateProjectDto {
     @Type(() => ParticipantDto)
     participants?: ParticipantDto[];
 
-    @IsArray()
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => TaskDto)
-    tasks?: TaskDto[];
-
     @IsString()
     @IsOptional()
     projectImage!: string | null;

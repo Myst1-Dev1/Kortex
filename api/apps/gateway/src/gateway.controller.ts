@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Controller, Get, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -10,6 +8,7 @@ export class GatewayController {
     @Inject('AUTH_CLIENT') private readonly authClient: ClientProxy,
     @Inject('MEDIA_CLIENT') private readonly mediaClient: ClientProxy,
     @Inject('PROJECTS_CLIENT') private readonly projectsClient: ClientProxy,
+    @Inject('TASKS_CLIENT') private readonly tasksClient: ClientProxy,
   ) {}
 
   @Get('/health')
@@ -34,13 +33,14 @@ export class GatewayController {
       }
     };
 
-    const [auth, media, projects] = await Promise.all([
+    const [auth, media, projects, tasks] = await Promise.all([
       ping('auth', this.authClient),
       ping('media', this.mediaClient),
       ping('projects', this.projectsClient),
+      ping('tasks', this.tasksClient),
     ]);
 
-    const ok = [auth, media, projects].every((s) => s.ok);
+    const ok = [auth, media, projects, tasks].every((s) => s.ok);
 
     return {
       ok,
@@ -52,6 +52,7 @@ export class GatewayController {
         auth,
         media,
         projects,
+        tasks,
       },
     };
   }
