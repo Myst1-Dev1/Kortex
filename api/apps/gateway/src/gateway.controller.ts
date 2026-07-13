@@ -9,6 +9,7 @@ export class GatewayController {
     @Inject('MEDIA_CLIENT') private readonly mediaClient: ClientProxy,
     @Inject('PROJECTS_CLIENT') private readonly projectsClient: ClientProxy,
     @Inject('TASKS_CLIENT') private readonly tasksClient: ClientProxy,
+    @Inject('CHAT_CLIENT') private readonly chatClient: ClientProxy,
   ) {}
 
   @Get('/health')
@@ -33,14 +34,15 @@ export class GatewayController {
       }
     };
 
-    const [auth, media, projects, tasks] = await Promise.all([
+    const [auth, media, projects, tasks, chat] = await Promise.all([
       ping('auth', this.authClient),
       ping('media', this.mediaClient),
       ping('projects', this.projectsClient),
       ping('tasks', this.tasksClient),
+      ping('chat', this.chatClient),
     ]);
 
-    const ok = [auth, media, projects, tasks].every((s) => s.ok);
+    const ok = [auth, media, projects, tasks, chat].every((s) => s.ok);
 
     return {
       ok,
@@ -53,6 +55,7 @@ export class GatewayController {
         media,
         projects,
         tasks,
+        chat,
       },
     };
   }

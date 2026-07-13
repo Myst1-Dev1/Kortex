@@ -23,9 +23,14 @@ services:
       - .env
 
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+
+      redis:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - kortex_network
@@ -52,9 +57,12 @@ services:
       - .env
 
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - kortex_network
@@ -81,9 +89,12 @@ services:
       - .env
 
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - kortex_network
@@ -110,9 +121,12 @@ services:
       - .env
 
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - kortex_network
@@ -139,9 +153,44 @@ services:
       - .env
 
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - kortex_network
+
+  chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kortex_chat
+
+    command: npm run start:chat
+
+    restart: always
+
+    ports:
+      - '4007:4007'
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    env_file:
+      - .env
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
     networks:
       - kortex_network
@@ -164,6 +213,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kortex"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 45s
+
     networks:
       - kortex_network
   redis:
@@ -178,6 +234,12 @@ services:
 
     volumes:
       - redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
     networks:
       - kortex_network
@@ -199,6 +261,12 @@ services:
 
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
     networks:
       - kortex_network

@@ -6,9 +6,10 @@ import { MediaModule } from './media/media.module';
 import { ProjectsModule } from './projects/projects.module';
 import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
+import { ChatGatewayModule } from './chat/chat.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, MediaModule, ProjectsModule, TasksModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, MediaModule, ProjectsModule, TasksModule, ChatGatewayModule],
   controllers: [GatewayController],
   providers: [GatewayService],
 })
