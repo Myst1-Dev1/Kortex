@@ -1,20 +1,56 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
+import { useActionState, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { signUpAction } from "@/lib/actions/auth";
 import Image from "next/image";
 
 interface RegisterProps {
     setActiveForm: any;
 }
 
-export function Register({ setActiveForm }:RegisterProps) {
+const initialState = {
+    success: false,
+    error: undefined,
+};
+
+export function Register({ setActiveForm }: RegisterProps) {
+    const [state, formAction, pending] = useActionState(handleRegister, initialState);
+    const [file, setFile] = useState<File | null>(null);
+
+    async function handleRegister(prevState: any, data: FormData) {
+        const result = await signUpAction(prevState, data);
+
+        if(result.success === true) {
+            setActiveForm('login')
+        } else {
+            alert('Tivemos um erro na criação da conta, tente novamente!');
+        }
+
+        return result;
+    }
+
     return (
         <>
-            <form action="" className="w-full max-w-md mt-7 space-y-5">
+            <form action={formAction} className="w-full max-w-md mt-7 space-y-5">
                 <div className="space-y-4 grid place-items-center grid-cols-1">
-                    <Image src='/images/uploadImage.png' className="rounded-full w-32 object-cover aspect-square" width={200} height={200} alt="foto de usuário" />
-                    <label className="cursor-pointer" htmlFor="file">Envie uma imagem</label>
-                    <input type="file" name="file" id="file" className="hidden" />
+                    <Image src={file ? URL.createObjectURL(file) : '/images/uploadImage.png'} className="rounded-full w-32 object-cover aspect-square" width={200} height={200} alt="foto de usuário" />
+                    <label className="cursor-pointer" htmlFor="avatar">Envie uma imagem</label>
+                    <input
+                        type="file"
+                        name="avatar"
+                        id="avatar"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => {
+                        const selectedFile = e.target.files?.[0];
+                        if (selectedFile) {
+                            setFile(selectedFile);
+                        }
+                        }}
+                    />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
@@ -74,11 +110,23 @@ export function Register({ setActiveForm }:RegisterProps) {
                         </div>
                     </div>
                 </div>
+
+                {state?.error && (
+                    <p className="text-sm text-red-500" role="alert">
+                        {state.error}
+                    </p>
+                )}
+
                 <button 
                     type="submit" 
-                    className="w-full bg-[#1F108E] text-white py-3 rounded-xl cursor-pointer hover:bg-violet-700 font-semibold text-lg flex items-center justify-center gap-2 transition-all duration-500"
+                    disabled={pending}
+                    className="w-full bg-[#1F108E] text-white py-3 rounded-xl cursor-pointer hover:bg-violet-700 font-semibold text-lg flex items-center justify-center gap-2 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Cadastrar <span>➔</span>
+                    {pending ? (
+                        <Spinner size={20} className="text-white" />
+                    ) : (
+                        <>Cadastrar <span>➔</span></>
+                    )}
                 </button>
             </form>
 

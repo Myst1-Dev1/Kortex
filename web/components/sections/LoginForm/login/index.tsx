@@ -1,15 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useActionState } from "react";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { signInAction } from "@/lib/actions/auth";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface LoginProps {
     setActiveForm: any;
 }
 
-export function Login({ setActiveForm }:LoginProps) {
+const initialState = {
+    success: false,
+    error: undefined,
+};
+
+export function Login({ setActiveForm }: LoginProps) {
+    const [state, formAction, pending] = useActionState(handleLogin, initialState);
+    
+    const router = useRouter()
+
+    async function handleLogin(prevState: any, formData: FormData) {
+        const result = await signInAction(prevState, formData);
+    
+        if(result.success === true) {
+            router.push('/dashboard');
+        } else {
+            alert('Tivemos um erro ao ao fazer o login, tente novamente!')
+        }
+        
+        return result;
+    }
     return (
         <>
-            <form className="w-full mt-7 space-y-5">
+            <form action={formAction} className="w-full mt-7 space-y-5">
                 <div className="space-y-1.5">
                     <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
                         <span className="text-xs">✉</span> E-mail
@@ -56,11 +82,22 @@ export function Login({ setActiveForm }:LoginProps) {
                 </label>
                 </div>
 
+                {state?.error && (
+                    <p className="text-sm text-red-500" role="alert">
+                        {state.error}
+                    </p>
+                )}
+
                 <button 
                 type="submit" 
-                className="w-full bg-[#1F108E] text-white py-3 rounded-xl cursor-pointer hover:bg-opacity-90 font-semibold text-lg flex items-center justify-center gap-2 transition-all"
+                disabled={pending}
+                className="w-full bg-[#1F108E] text-white py-3 rounded-xl cursor-pointer hover:bg-opacity-90 font-semibold text-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                Entrar <span>➔</span>
+                {pending ? (
+                    <Spinner size={20} className="text-white" />
+                ) : (
+                    <>Entrar <span>➔</span></>
+                )}
                 </button>
             </form>
 
