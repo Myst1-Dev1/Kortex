@@ -1,6 +1,7 @@
 import { parseCookies } from 'nookies';
 
 export interface User {
+    id?: string;
     name?: string;
     email?: string;
     avatarUrl?: string;

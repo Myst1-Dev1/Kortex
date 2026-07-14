@@ -8,8 +8,13 @@ import { Plus } from "lucide-react";
 import { TasksAndProjects } from "../tasksAndProjects";
 import { CreateProjectModal } from "../createProjectModal";
 import { useUser } from "@/services/user";
+import { Project } from "@/lib/actions/projects";
 
-export function DashboardContent() {
+interface DashboardContentProps {
+    data: Project | any;
+}
+
+export function DashboardContent({ data }:DashboardContentProps) {
     const [isSideBarOpen, setIsSideBarOpen] = useState(false);
     const [isOpenProjectModal, setIsOpenProjectModal] = useState(false);
 
@@ -30,7 +35,7 @@ export function DashboardContent() {
                             </div>
                             <button onClick={() => setIsOpenProjectModal(true)} className="p-3 rounded-xl bg-[#1F108E] font-semibold text-white cursor-pointer transition-all duration-500 hover:bg-[#100752] flex items-center gap-1"><Plus className="font-bold text-2xl m-auto"/> Criar Projeto</button>
                         </div>
-                        <TasksAndProjects />
+                        <TasksAndProjects data = {data} />
                         <RecentActivity />
                     </div>
                 </main>
