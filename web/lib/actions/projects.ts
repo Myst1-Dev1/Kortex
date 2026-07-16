@@ -52,6 +52,28 @@ function getUserFromCookie(
   }
 }
 
+function getFullUserFromCookie(
+  cookieStore: Awaited<ReturnType<typeof cookies>>
+): { id: string; name: string; email: string; avatarUrl: string | null } | null {
+  const raw = cookieStore.get("user")?.value;
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed?.id && parsed?.name && parsed?.email) {
+      return {
+        id: parsed.id,
+        name: parsed.name,
+        email: parsed.email,
+        avatarUrl: parsed.avatarUrl ?? parsed.avatar_url ?? null,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getAllProjectsAction(): Promise<ProjectState<Project[]>> {
   const headers = await authHeaders();
   if (!headers) {
@@ -81,7 +103,7 @@ export async function getAllProjectsAction(): Promise<ProjectState<Project[]>> {
     const filtered = data.filter(
       (project) =>
         project.author_id === user.id ||
-        project.participants?.includes(user.id)
+        project.participants?.some((p:any) => p.id === user.id)
     );
 
     return { success: true, data: filtered };
@@ -263,9 +285,20 @@ export async function inviteToProjectAction(
       };
     }
 
-    const data = await res.json();
+    // --- CORREÇÃO AQUI ---
+    const contentType = res.headers.get("content-type");
+    let data;
+
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      // Se a API retornar texto puro (ex: a URL direta "http://localhost...")
+      data = await res.text();
+    }
+
     return { success: true, data };
-  } catch {
+  } catch (error: any) {
+    console.log('erro:', error);
     return { success: false, error: "Erro ao conectar com o servidor" };
   }
 }
@@ -304,4 +337,67 @@ export async function acceptProjectInviteAction(
   } catch {
     return { success: false, error: "Erro ao conectar com o servidor" };
   }
+}
+
+export interface InviteInfo {
+  project: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+  invitedBy?: {
+    name: string;
+    email: string;
+  };
+}
+
+function decodeInviteToken(token: string): { projectId: string; invitedEmail?: string } | null {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    if (decoded?.projectId) {
+      return { projectId: decoded.projectId, invitedEmail: decoded.invitedEmail };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getInviteInfoAction(
+  token: string
+): Promise<ProjectState<InviteInfo>> {
+  const decoded = decodeInviteToken(token);
+  if (!decoded) {
+    return { success: false, error: "Token de convite inválido" };
+  }
+
+  const projectResult = await getProjectByIdAction(decoded.projectId);
+  if (!projectResult.success) {
+    return { success: false, error: "Projeto não encontrado" };
+  }
+
+  return {
+    success: true,
+    data: {
+      project: {
+        id: projectResult.data.id,
+        name: projectResult.data.name,
+        description: projectResult.data.description,
+      },
+    },
+  };
+}
+
+export async function acceptInviteAction(
+  token: string
+): Promise<ProjectState> {
+  const cookieStore = await cookies();
+  const user = getFullUserFromCookie(cookieStore);
+
+  if (!user) {
+    return { success: false, error: "Usuário não autenticado" };
+  }
+
+  return acceptProjectInviteAction(token, user);
 }
