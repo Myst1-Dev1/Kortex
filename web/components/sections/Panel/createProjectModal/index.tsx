@@ -39,7 +39,7 @@ export function CreateProjectModal({ isOpenModal, setIsOpenModal }: CreateProjec
                 <h1 className="text-2xl font-semibold">Criar novo projeto</h1>
 
                 <form action={formAction} className="space-y-5 w-full mt-7 mb-3">
-                    <input type="text" name="author_id" className="hidden" value={user?.id} defaultValue={user?.id} />
+                    <input type="text" name="author_id" className="hidden" value={user?.id} defaultValue={user?.id} readOnly />
                     <div className="space-y-2">
                         <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
                             Nome do projeto

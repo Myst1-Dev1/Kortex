@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { fetchWithAuth } from "@/lib/api";
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -23,18 +24,6 @@ export interface Project {
   deadline_for_completion?: string;
   created_at?: string;
   updated_at?: string;
-}
-
-async function authHeaders(): Promise<Record<string, string> | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
-
-  if (!token) return null;
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
 }
 
 function getUserFromCookie(
@@ -75,13 +64,8 @@ function getFullUserFromCookie(
 }
 
 export async function getAllProjectsAction(): Promise<ProjectState<Project[]>> {
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects`, { headers });
+    const res = await fetchWithAuth(`${API_URL}projects`);
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
@@ -115,13 +99,8 @@ export async function getAllProjectsAction(): Promise<ProjectState<Project[]>> {
 export async function getProjectByIdAction(
   id: string
 ): Promise<ProjectState<Project>> {
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/${id}`, { headers });
+    const res = await fetchWithAuth(`${API_URL}projects/${id}`);
 
     if (!res.ok) {
       const body = await res.json().catch(() => null);
@@ -156,15 +135,9 @@ export async function createProjectAction(
     return { success: false, error: message };
   }
 
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/create-new-project`, {
+    const res = await fetchWithAuth(`${API_URL}projects/create-new-project`, {
       method: "POST",
-      headers,
       body: JSON.stringify(validated.data),
     });
 
@@ -201,15 +174,9 @@ export async function updateProjectAction(
     return { success: false, error: message };
   }
 
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/${id}/update`, {
+    const res = await fetchWithAuth(`${API_URL}projects/${id}/update`, {
       method: "PATCH",
-      headers,
       body: JSON.stringify(validated.data),
     });
 
@@ -231,15 +198,9 @@ export async function updateProjectAction(
 export async function deleteProjectAction(
   id: string
 ): Promise<ProjectState> {
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/${id}/delete`, {
+    const res = await fetchWithAuth(`${API_URL}projects/${id}/delete`, {
       method: "DELETE",
-      headers,
     });
 
     if (!res.ok) {
@@ -265,15 +226,9 @@ export async function inviteToProjectAction(
     return { success: false, error: "E-mail inválido" };
   }
 
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/${id}/invite`, {
+    const res = await fetchWithAuth(`${API_URL}projects/${id}/invite`, {
       method: "POST",
-      headers,
       body: JSON.stringify(validated.data),
     });
 
@@ -312,15 +267,9 @@ export async function acceptProjectInviteAction(
     avatarUrl: string | null;
   }
 ): Promise<ProjectState> {
-  const headers = await authHeaders();
-  if (!headers) {
-    return { success: false, error: "Sessão expirada" };
-  }
-
   try {
-    const res = await fetch(`${API_URL}projects/accept-invite`, {
+    const res = await fetchWithAuth(`${API_URL}projects/accept-invite`, {
       method: "POST",
-      headers,
       body: JSON.stringify({ token, currentUser }),
     });
 
