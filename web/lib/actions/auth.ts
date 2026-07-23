@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { LoginSchema, RegisterSchema } from "@/lib/schemas/auth";
 import { revalidatePath } from "next/cache";
+import { fetchWithAuth } from "@/lib/api";
 
 const API_URL = process.env.API_URL;
 
@@ -162,4 +163,29 @@ export async function logoutAction(): Promise<void> {
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
   cookieStore.delete("user");
+}
+
+export interface PublicUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+}
+
+export async function getUsersByIdsAction(
+  ids: string[]
+): Promise<PublicUser[]> {
+  if (!ids.length) return [];
+
+  try {
+    const res = await fetchWithAuth(
+      `${API_URL}auth/users?ids=${ids.join(",")}`
+    );
+
+    if (!res.ok) return [];
+
+    return await res.json();
+  } catch {
+    return [];
+  }
 }

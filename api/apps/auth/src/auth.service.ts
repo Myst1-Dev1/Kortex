@@ -176,4 +176,16 @@ export class AuthService {
   async revokeSession(userId: string) {
     await this.redisService.del(this.sessionKey(userId));
   }
+
+  async findUsersByIds(ids: string[]) {
+    if (!ids.length) return [];
+
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.name', 'user.email', 'user.avatarUrl'])
+      .where('user.id IN (:...ids)', { ids })
+      .getMany();
+
+    return users;
+  }
 }

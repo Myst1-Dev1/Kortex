@@ -26,4 +26,9 @@ export class AuthController {
   refreshToken(@Payload() dto: RefreshTokenResponse) {
     return this.authService.refreshToken(dto);
   }
+
+  @MessagePattern('auth.findUsersByIds')
+  findUsersByIds(@Payload() data: { ids: string[] }) {
+    return this.authService.findUsersByIds(data.ids);
+  }
 }

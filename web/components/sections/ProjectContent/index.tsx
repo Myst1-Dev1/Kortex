@@ -33,7 +33,7 @@ export function ProjectContent({ data, tasks }:ProjectContentProps) {
                     </div>
                 </main>
             </div>
-            <ChatBtn />
+            <ChatBtn projectId={data?.data?.id ?? ""} />
         </>
     )
 }

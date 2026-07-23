@@ -90,7 +90,7 @@ export class ChatService {
 
       const saved = await this.messageRepository.save(message);
 
-      await this.invalidateCache(chat.id);
+      await this.invalidateCache(chat.project_id);
 
       this.logger.log(`Mensagem enviada com sucesso! ID: ${saved.id}`);
       return saved;
@@ -113,6 +113,7 @@ export class ChatService {
     try {
       const message = await this.messageRepository.findOne({
         where: { id: dto.message_id },
+        relations: ['chat'],
       });
 
       if (!message) {
@@ -128,10 +129,10 @@ export class ChatService {
 
       const saved = await this.messageRepository.save(message);
 
-      await this.invalidateCache(message.chat_id);
+      await this.invalidateCache(message.chat.project_id);
 
       this.logger.log(`Mensagem ${dto.message_id} editada com sucesso!`);
-      return saved;
+      return { ...saved, project_id: message.chat.project_id } as Message & { project_id: string };
     } catch (error: any) {
       if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;
@@ -147,12 +148,13 @@ export class ChatService {
     }
   }
 
-  async deleteMessage(messageId: string, senderId: string): Promise<{ message: string }> {
+  async deleteMessage(messageId: string, senderId: string): Promise<{ message: string; project_id: string }> {
     this.logger.log(`Deletando mensagem ${messageId} por ${senderId}`);
 
     try {
       const message = await this.messageRepository.findOne({
         where: { id: messageId },
+        relations: ['chat'],
       });
 
       if (!message) {
@@ -166,10 +168,10 @@ export class ChatService {
       message.deleted = true;
       await this.messageRepository.save(message);
 
-      await this.invalidateCache(message.chat_id);
+      await this.invalidateCache(message.chat.project_id);
 
       this.logger.log(`Mensagem ${messageId} deletada com sucesso (soft delete)!`);
-      return { message: 'Mensagem removida com sucesso.' };
+      return { message: 'Mensagem removida com sucesso.', project_id: message.chat.project_id };
     } catch (error: any) {
       if (error instanceof NotFoundException || error instanceof ForbiddenException) {
         throw error;

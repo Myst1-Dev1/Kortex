@@ -4,9 +4,12 @@
 import {
   Body,
   Controller,
+  Get,
   Inject,
   Post,
+  Query,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 
@@ -17,6 +20,7 @@ import type { Express } from 'express';
 import { SignUpDto } from './dto/signUpDto';
 import { SignInDto } from './dto/signInDto';
 import { RefreshTokenDto } from './dto/refreshTokenDto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -85,6 +89,15 @@ export class AuthController {
       this.authClient.send('auth.refreshToken', {
         refreshToken: body.refreshToken,
       }),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('users')
+  async getUsersByIds(@Query('ids') ids: string) {
+    const idArray = ids.split(',').filter(Boolean);
+    return firstValueFrom(
+      this.authClient.send('auth.findUsersByIds', { ids: idArray }),
     );
   }
 }
