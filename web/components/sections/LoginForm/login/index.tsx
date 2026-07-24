@@ -37,7 +37,7 @@ export function Login({ setActiveForm }: LoginProps) {
         <>
             <form action={formAction} className="w-full mt-7 space-y-5">
                 <div className="space-y-1.5">
-                    <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                    <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                         <span className="text-xs">✉</span> E-mail
                     </label>
                     <div className="relative">
@@ -52,7 +52,7 @@ export function Login({ setActiveForm }: LoginProps) {
 
                 <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                    <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                    <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                     <span className="text-xs">🔒</span> Senha
                     </label>
                     <span className="text-[#1F108E] font-medium text-xs cursor-pointer hover:underline">
@@ -77,7 +77,7 @@ export function Login({ setActiveForm }: LoginProps) {
                     type="checkbox" 
                     className="h-4 w-4 text-[#1F108E] focus:ring-[#1F108E] border-gray-300 rounded cursor-pointer" 
                 />
-                <label htmlFor="remember_me" className="ml-2 block text-sm text-[#464553] cursor-pointer">
+                <label htmlFor="remember_me" className="ml-2 block text-sm text-[#464553] dark:text-gray-300 cursor-pointer">
                     Lembrar de mim
                 </label>
                 </div>
@@ -110,17 +110,17 @@ export function Login({ setActiveForm }: LoginProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all">
+                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
                 <Image src="/images/google-icon.png" alt="Google" width={16} height={16} />
                 Google
                 </button>
-                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all">
+                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
                 <Image src="/images/linkedin-icon.png" alt="LinkedIn" width={16} height={16} />
                 LinkedIn
                 </button>
             </div>
 
-            <div className="text-center mt-8 text-sm text-gray-500">
+            <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
                 Não tem uma conta?{' '}
                 <span onClick={() => setActiveForm('register')} className="text-[#1F108E] font-medium cursor-pointer hover:underline">
                     Solicitar acesso

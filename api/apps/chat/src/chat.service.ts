@@ -1,11 +1,13 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RedisService } from '../../../libs/redis/src/redis.service';
@@ -30,6 +32,12 @@ export class ChatService {
     private readonly chatRepository: Repository<Chat>,
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
+
+    @Inject('NOTIFICATIONS_CLIENT')
+    private readonly notifClient: ClientProxy,
+
+    @Inject('PROJECTS_CLIENT')
+    private readonly projectsClient: ClientProxy,
   ) {}
 
   ping() {
@@ -38,6 +46,32 @@ export class ChatService {
       service: 'chat',
       now: new Date().toISOString(),
     };
+  }
+
+  private async getProjectMembers(projectId: string): Promise<string[]> {
+    try {
+      const { firstValueFrom } = await import('rxjs');
+      const project = await firstValueFrom(
+        this.projectsClient.send('projects.getById', { id: projectId }),
+      );
+      const participants: Array<{ id: string }> = project?.participants ?? [];
+      const memberIds = participants.map((p) => p.id);
+      if (project?.author_id && !memberIds.includes(project.author_id)) {
+        memberIds.push(project.author_id);
+      }
+      return memberIds;
+    } catch (error: any) {
+      this.logger.warn(`Falha ao buscar membros do projeto ${projectId}: ${error.message}`);
+      return [];
+    }
+  }
+
+  private async emitEvent(event: string, payload: Record<string, unknown>) {
+    try {
+      this.notifClient.emit(event, payload);
+    } catch (error: any) {
+      this.logger.warn(`Falha ao emitir evento ${event}: ${error.message}`);
+    }
   }
 
   async createChatForProject(projectId: string): Promise<Chat> {
@@ -91,6 +125,16 @@ export class ChatService {
       const saved = await this.messageRepository.save(message);
 
       await this.invalidateCache(chat.project_id);
+
+      const members = await this.getProjectMembers(chat.project_id);
+
+      await this.emitEvent('chat.message.sent', {
+        project_id: chat.project_id,
+        message_id: saved.id,
+        sender_id: dto.sender_id,
+        message: dto.message,
+        members,
+      });
 
       this.logger.log(`Mensagem enviada com sucesso! ID: ${saved.id}`);
       return saved;

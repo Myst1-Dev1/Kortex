@@ -7,9 +7,10 @@ import { ProjectsModule } from './projects/projects.module';
 import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
 import { ChatGatewayModule } from './chat/chat.module';
+import { NotificationsGatewayModule } from './notifications/notifications.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, MediaModule, ProjectsModule, TasksModule, ChatGatewayModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, MediaModule, ProjectsModule, TasksModule, ChatGatewayModule, NotificationsGatewayModule],
   controllers: [GatewayController],
   providers: [GatewayService],
 })

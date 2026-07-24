@@ -3,9 +3,8 @@
 import { useActionState, useState } from "react";
 import { Modal } from "@/components/modal";
 import { Spinner } from "@/components/ui/spinner";
+import { TiptapEditor } from "@/components/ui/tiptap-editor";
 import { createTaskAction } from "@/lib/actions/tasks";
-import SunEditor from "suneditor-react";
-import "suneditor/dist/css/suneditor.min.css";
 import Image from "next/image";
 import { Check } from "lucide-react";
 
@@ -52,12 +51,12 @@ export function TaskModal({
 
   return (
     <Modal maxWidth="max-w-md" isOpenModal={isTaskModalOpen} setIsOpenModal={setIsTaskModalOpen}>
-      <h1 className="text-center text-2xl font-bold">Crie uma nova tarefa</h1>
+      <h1 className="text-center text-2xl font-bold dark:text-gray-100">Crie uma nova tarefa</h1>
       <form action={formAction} className="space-y-4 mt-10">
         <input type="hidden" name="project_id" value={projectId} readOnly />
 
         <div className="space-y-2">
-          <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+          <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
             Nome da tarefa
           </label>
           <input
@@ -65,23 +64,23 @@ export function TaskModal({
             name="name"
             type="text"
             placeholder="Desenvolver o front em react"
-            className="p-3 w-full outline-none rounded-md border border-gray-300 placeholder:text-gray-400 transition-all duration-500 focus-visible:ring-1 focus-visible:ring-zinc-400"
+            className="p-3 w-full outline-none rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 transition-all duration-500 focus-visible:ring-1 focus-visible:ring-zinc-400"
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="description" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+          <label htmlFor="description" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
             Descrição da tarefa
           </label>
-          <SunEditor
+          <TiptapEditor
             name="description"
-            height="150"
+            height={150}
             placeholder="Será um site com foco..."
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="time_estimated" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+          <label htmlFor="time_estimated" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
             Tempo estimado para conclusão
           </label>
           <input
@@ -89,7 +88,7 @@ export function TaskModal({
             type="text"
             maxLength={5}
             placeholder="00:00"
-            className="p-3 w-full outline-none rounded-md border border-gray-300 placeholder:text-gray-400 transition-all duration-500 focus-visible:ring-1 focus-visible:ring-zinc-400"
+            className="p-3 w-full outline-none rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 transition-all duration-500 focus-visible:ring-1 focus-visible:ring-zinc-400"
             onChange={(e) => {
               let value = e.target.value.replace(/\D/g, "");
               if (value.length > 2) {
@@ -102,7 +101,7 @@ export function TaskModal({
 
         {participants.length > 0 && (
           <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+            <label className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
               Atribuir a
             </label>
             <div className="flex flex-wrap gap-2">
@@ -117,7 +116,7 @@ export function TaskModal({
                       flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer
                       ${isSelected
                         ? "border-[#1F108E] bg-[#1F108E]/5 text-[#1F108E]"
-                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 hover:bg-gray-50"
                       }
                     `}
                   >

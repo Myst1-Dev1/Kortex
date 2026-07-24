@@ -27,17 +27,17 @@ export function TasksAndProjects({ data }:TasksAndProjectsProps) {
         <>
             <div className="mt-10 grid grid-cols-2 gap-10 lg:gap-0 place-items-center lg:grid-cols-3 2xl:grid-cols-4">
                 {projectsList?.map((project: any) => (
-                    <div key={project.id} className="bg-white border border-[#F1F0F7] shadow-sm max-w-80 w-full rounded-xl p-4">
+                    <div key={project.id} className="bg-white dark:bg-gray-800 border border-[#F1F0F7] dark:border-gray-700 shadow-sm max-w-80 w-full rounded-xl p-4">
                         <div className="flex justify-between items-center w-full">
-                            <div className="w-10 h-10 rounded-md grid place-items-center bg-[#F5F4FA]"><Star className="text-[#1F108E] w-5 h-5" /></div>
+                            <div className="w-10 h-10 rounded-md grid place-items-center bg-[#F5F4FA] dark:bg-gray-700"><Star className="text-[#1F108E] w-5 h-5" /></div>
                             <span className="bg-[#F0FDF4] font-bold uppercase text-[#15803D] rounded-full py-2 px-5 border border-[#DCFCE7] text-sm">ativo</span>
                         </div>
-                        <h3 className="text-xl font-semibold my-2">{project.name}</h3>
+                        <h3 className="text-xl font-semibold my-2 dark:text-gray-100">{project.name}</h3>
                         <div
-                            className="text-gray-400 text-sm font-light max-w-full break-words line-clamp-2"
+                            className="text-gray-400 dark:text-gray-500 text-sm font-light max-w-full break-words line-clamp-2"
                             dangerouslySetInnerHTML={{ __html: project?.description ?? "" }}
                         />
-                        <div className="mt-10 border-t border-gray-200">
+                        <div className="mt-10 border-t border-gray-200 dark:border-gray-700">
                             <div className="mt-5 flex items-center justify-between">
                                {project.participants && project.participants.length > 0 && (
                                 <div className="flex -space-x-2.5 items-center">
@@ -63,7 +63,7 @@ export function TasksAndProjects({ data }:TasksAndProjectsProps) {
                                     )}
                                 </div>
                                 )}
-                                <Link href={`/project/${project.id}`} className="cursor-pointer p-3 font-bold text-base text-[#1F108E] border border-[#1F108E]/20 rounded-xl transition-all duration-500 hover:bg-[#100752] hover:text-white">Ver Projeto</Link>
+                                <Link href={`/project/${project.id}`} className="cursor-pointer p-3 font-bold text-base dark:text-blue-500 text-[#1F108E] border border-[#1F108E]/20 rounded-xl transition-all duration-500 hover:bg-[#100752] hover:text-white">Ver Projeto</Link>
                             </div>
                         </div>
                     </div>

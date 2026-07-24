@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ChatController } from './chat.controller';
@@ -20,6 +21,30 @@ import { RedisModule } from '../../../libs/redis/src/redis.module';
         password: config.get<string>('REDIS_PASSWORD') || undefined,
       }),
     }),
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATIONS_CLIENT',
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URI ?? 'amqp://guest:guest@rabbitmq:5672',
+          ],
+          queue: process.env.NOTIFICATIONS_QUEUE ?? 'notifications_queue',
+          queueOptions: { durable: false },
+        },
+      },
+      {
+        name: 'PROJECTS_CLIENT',
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URI ?? 'amqp://guest:guest@rabbitmq:5672',
+          ],
+          queue: process.env.PROJECTS_QUEUE ?? 'projects_queue',
+          queueOptions: { durable: false },
+        },
+      },
+    ]),
   ],
   controllers: [ChatController],
   providers: [ChatService],

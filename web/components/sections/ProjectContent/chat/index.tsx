@@ -1,10 +1,12 @@
 import Image from "next/image";
-import { MessageSquare, X, SendHorizontal } from "lucide-react";
+import { MessageSquare, X, SendHorizontal, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@/services/user";
 import {
   sendMessageAction,
   getLatestMessagesAction,
+  editMessageAction,
+  deleteMessageAction,
   type ChatMessage,
 } from "@/lib/actions/chat";
 import { getUsersByIdsAction, type PublicUser } from "@/lib/actions/auth";
@@ -27,6 +29,11 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const userCacheRef = useRef<Map<string, PublicUser>>(new Map());
   const [userCacheVersion, setUserCacheVersion] = useState(0);
+
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -66,7 +73,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
 
     if (!unknownIds.length) return;
 
-    getUsersByIdsAction(unknownIds).then((users) => {
+    getUsersByIdsAction(unknownIds).then((users: any) => {
       let changed = false;
       for (const u of users) {
         if (!userCacheRef.current.has(u.id)) {
@@ -156,6 +163,41 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
     [handleSend]
   );
 
+  const startEdit = useCallback((msg: ChatMessage) => {
+    setEditingId(msg.id);
+    setEditingText(msg.message);
+    setOpenMenuId(null);
+  }, []);
+
+  const confirmEdit = useCallback(async () => {
+    if (!editingId || !editingText.trim()) return;
+    const result = await editMessageAction(editingId, editingText.trim());
+    if (result.success) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === editingId ? { ...m, message: editingText.trim() } : m
+        )
+      );
+    }
+    setEditingId(null);
+    setEditingText("");
+  }, [editingId, editingText]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditingText("");
+  }, []);
+
+  const confirmDelete = useCallback(async (messageId: string) => {
+    setDeletingId(messageId);
+    setOpenMenuId(null);
+    const result = await deleteMessageAction(messageId);
+    if (result.success) {
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    }
+    setDeletingId(null);
+  }, []);
+
   const getSender = useCallback(
     (msg: ChatMessage): { name?: string; avatarUrl?: string } | undefined => {
       if (msg.sender?.name) return msg.sender;
@@ -174,7 +216,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
   };
 
   return (
-    <div className="w-full h-full lg:w-80 lg:h-125 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden fixed right-0 bottom-2 lg:bottom-24 lg:right-6 z-50">
+    <div className="w-full h-full lg:w-80 lg:h-125 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden fixed right-0 bottom-2 lg:bottom-24 lg:right-6 z-50">
       <div className="bg-[#1F108E] p-4 flex items-center justify-between text-white">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 stroke-2" />
@@ -188,7 +230,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
         </button>
       </div>
 
-      <div className="flex-1 p-4 overflow-y-auto bg-white flex flex-col gap-4 scrollbar-thin">
+      <div className="flex-1 p-4 overflow-y-auto bg-white dark:bg-gray-900 flex flex-col gap-4 scrollbar-thin">
         {isLoadingMessages ? (
           <div className="flex-1 flex items-center justify-center">
             <LoadingDots />
@@ -198,12 +240,15 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
             Nenhuma mensagem ainda
           </div>
         ) : (
-          messages.map((msg, index:number) => {
+          messages.map((msg, index: number) => {
             const isMe = msg.sender_id === user?.id;
             const sender = getSender(msg);
+            const isEditing = editingId === msg.id;
+            const isDeleting = deletingId === msg.id;
+
             return (
               <div
-                key={index}
+                key={msg.id ?? index}
                 className={`flex gap-2.5 max-w-[85%] ${
                   isMe ? "self-end flex-row-reverse" : "self-start"
                 }`}
@@ -217,23 +262,93 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
                   />
                 </div>
 
-                <div className="flex flex-col gap-0.5">
-                  <div
-                    className={`rounded-2xl p-3 text-xs leading-relaxed ${
-                      isMe
-                        ? "bg-[#1F108E] text-white rounded-tr-none"
-                        : "bg-[#F5F4FA] text-gray-800 rounded-tl-none"
-                    }`}
-                  >
-                    <span
-                      className={`block font-bold ${
-                        isMe ? "text-white" : "text-[#100752]"
-                      } mb-1`}
-                    >
-                      {isMe ? "Você" : sender?.name ?? "Usuário"}
-                    </span>
-                    <p>{msg.message}</p>
-                  </div>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  {isEditing ? (
+                    <div className="flex flex-col gap-1.5">
+                      <input
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") confirmEdit();
+                          if (e.key === "Escape") cancelEdit();
+                        }}
+                        autoFocus
+                        className="rounded-lg border border-[#1F108E] bg-white dark:bg-gray-800 px-3 py-2 text-xs text-gray-800 dark:text-gray-200 outline-none"
+                      />
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={confirmEdit}
+                          className="px-2 py-1 rounded-md bg-[#1F108E] text-white text-[10px] font-semibold cursor-pointer hover:bg-[#100752]"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="px-2 py-1 rounded-md border border-gray-200 text-gray-500 text-[10px] font-semibold cursor-pointer hover:bg-gray-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative group/msg">
+                      <div
+                        className={`rounded-2xl p-3 text-xs leading-relaxed ${
+                          isMe
+                            ? "bg-[#1F108E] text-white rounded-tr-none"
+                            : "bg-[#F5F4FA] dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none"
+                        } ${isDeleting ? "opacity-40" : ""}`}
+                      >
+                        <span
+                          className={`block font-bold ${
+                            isMe ? "text-white" : "text-[#100752]"
+                          } mb-1`}
+                        >
+                          {isMe ? "Você" : sender?.name ?? "Usuário"}
+                        </span>
+                        <p>{msg.message}</p>
+                      </div>
+
+                      {isMe && !isEditing && (
+                        <div
+                          className={`absolute -top-1 ${
+                            isMe ? "-left-1" : "-right-1"
+                          } opacity-0 group-hover/msg:opacity-100 transition-opacity`}
+                        >
+                          <button
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === msg.id ? null : msg.id
+                              )
+                            }
+                            className="p-1 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 shadow-sm text-gray-400 hover:text-gray-600 cursor-pointer"
+                          >
+                            <MoreHorizontal className="w-3 h-3" />
+                          </button>
+
+                          {openMenuId === msg.id && (
+                            <div className="absolute top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 z-50 min-w-[100px]">
+                              <button
+                                onClick={() => startEdit(msg)}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(msg.id)}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Deletar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <span
                     className={`text-[9px] font-medium text-gray-400 mt-1 ${
@@ -265,7 +380,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-3 bg-[#FAFAFE] border-t border-[#F1F0F7] flex items-center gap-2">
+      <div className="p-3 bg-[#FAFAFE] dark:bg-gray-800 border-t border-[#F1F0F7] dark:border-gray-700 flex items-center gap-2">
         <div className="relative flex-1 flex items-center">
           <input
             ref={inputRef}
@@ -275,7 +390,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
             onKeyDown={handleKeyDown}
             placeholder="Escreva uma mensagem..."
             disabled={isLoading}
-            className="w-full bg-[#EAE8F2]/40 border border-[#EAE8F2] rounded-full py-2.5 pl-4 pr-10 text-xs text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#1F108E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#EAE8F2]/40 dark:bg-gray-700 border border-[#EAE8F2] dark:border-gray-600 rounded-full py-2.5 pl-4 pr-10 text-xs text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#1F108E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             onClick={handleSend}

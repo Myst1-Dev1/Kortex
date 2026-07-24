@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -23,6 +24,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
             password: config.get<string>('REDIS_PASSWORD') || undefined,
         }),
     }),
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATIONS_CLIENT',
+        transport: Transport.RMQ,
+        options: {
+          urls: [
+            process.env.RABBITMQ_URI ?? 'amqp://guest:guest@rabbitmq:5672',
+          ],
+          queue: process.env.NOTIFICATIONS_QUEUE ?? 'notifications_queue',
+          queueOptions: { durable: false },
+        },
+      },
+    ]),
 ],
   controllers: [ProjectsController],
   providers: [ProjectsService],

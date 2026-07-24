@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Header } from "@/components/header";
 import { SideBar } from "@/components/sideBar";
@@ -18,6 +19,9 @@ interface ProjectContentProps {
 
 export function ProjectContent({ data, tasks }:ProjectContentProps) {
     const [isSideBarOpen, setIsSideBarOpen] = useState(false);
+    const router = useRouter();
+
+    const handleRefresh = () => router.refresh();
 
     return (
         <>
@@ -27,9 +31,9 @@ export function ProjectContent({ data, tasks }:ProjectContentProps) {
                 <main className="ml-0 lg:ml-64 flex-1">
                     <Header setIsSideBarOpen = {setIsSideBarOpen} />
                     <div className="p-3 lg:p-10">
-                        <ProjectData data={data} />
-                        <ConclusionGraphs />
-                        <ListTasks tasks = {tasks} participants={data?.data?.participants} />
+                        <ProjectData data={data} onProjectUpdated={handleRefresh} />
+                        <ConclusionGraphs tasks={tasks?.data} />
+                        <ListTasks tasks={tasks} participants={data?.data?.participants} onTaskChanged={handleRefresh} />
                     </div>
                 </main>
             </div>

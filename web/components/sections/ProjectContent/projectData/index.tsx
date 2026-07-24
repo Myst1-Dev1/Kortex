@@ -6,15 +6,20 @@ import { Spinner } from "@/components/ui/spinner";
 import DOMPurify from "dompurify";
 import { useState } from "react";
 import { TaskModal } from "../taskModal";
+import { EditProjectModal } from "./editProjectModal";
+import { ConfirmDeleteProjectModal } from "./confirmDeleteModal";
 
 interface ProjectDataProps {
     data: Project | any;
+    onProjectUpdated?: () => void;
 }
 
-export function ProjectData({ data }:ProjectDataProps) {
+export function ProjectData({ data, onProjectUpdated }: ProjectDataProps) {
     const [copied, setCopied] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isTaskModaLOpen, setIsTaskModalOpen] = useState(false);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
     const { user } = useUser();
     const isAuthor = user?.id === data?.data?.author_id;
@@ -68,9 +73,9 @@ export function ProjectData({ data }:ProjectDataProps) {
 
     return (
         <>
-            <div className="relative mb-10 mt-2 lg:-mt-4 w-full bg-[#FAFAFE] rounded-2xl border border-[#F1F0F7] p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+            <div className="relative mb-10 mt-2 lg:-mt-4 w-full bg-[#FAFAFE] dark:bg-gray-800 rounded-2xl border border-[#F1F0F7] dark:border-gray-700 p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
                 <div className="space-y-3 flex-1 min-w-0">
-                    <h1 className="text-2xl lg:text-3xl font-extrabold text-[#100752] tracking-tight truncate">
+                    <h1 className="text-2xl lg:text-3xl font-extrabold text-[#100752] dark:text-gray-100 tracking-tight truncate">
                         {data?.data?.name}
                     </h1>
                     
@@ -78,11 +83,11 @@ export function ProjectData({ data }:ProjectDataProps) {
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(data?.data?.description ?? "")
                         }}
-                        className="text-sm lg:text-base text-gray-500 font-medium w-full whitespace-pre-wrap break-all leading-relaxed"
+                        className="text-sm lg:text-base text-gray-500 dark:text-gray-400 font-medium w-full whitespace-pre-wrap break-all leading-relaxed"
                     />
                     <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-xs font-semibold text-gray-400">Prazo: {data?.data?.deadline_for_completion && 
+                        <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">Prazo: {data?.data?.deadline_for_completion && 
                             new Date(data.data.deadline_for_completion).toLocaleDateString('pt-BR', {
                                 day: 'numeric',
                                 month: 'long'
@@ -158,18 +163,20 @@ export function ProjectData({ data }:ProjectDataProps) {
                     </div>
                 </div>
                 )}
+                {isAuthor && (
                 <div className="absolute -top-2 right-0 flex items-center gap-8">
                     <button
+                        onClick={() => setIsEditOpen(true)}
                         className="
                         cursor-pointer
                         group
                         flex items-center gap-2
                         rounded-xl
-                        border border-slate-200/80
-                        bg-white/80
+                        border border-slate-200/80 dark:border-gray-600/80
+                        bg-white/80 dark:bg-gray-800/80 dark:bg-gray-800/80
                         backdrop-blur-sm
                         px-4 py-2
-                        text-sm font-semibold text-slate-600
+                        text-sm font-semibold text-slate-600 dark:text-gray-300
                         shadow-sm
                         transition-all duration-300
                         hover:-translate-y-0.5
@@ -190,16 +197,17 @@ export function ProjectData({ data }:ProjectDataProps) {
                     </button>
 
                     <button
+                        onClick={() => setIsDeleteOpen(true)}
                         className="
                         cursor-pointer
                         group
                         flex items-center gap-2
                         rounded-xl
-                        border border-slate-200/80
-                        bg-white/80
+                        border border-slate-200/80 dark:border-gray-600/80
+                        bg-white/80 dark:bg-gray-800/80 dark:bg-gray-800/80
                         backdrop-blur-sm
                         px-4 py-2
-                        text-sm font-semibold text-slate-600
+                        text-sm font-semibold text-slate-600 dark:text-gray-300
                         shadow-sm
                         transition-all duration-300
                         hover:-translate-y-0.5
@@ -219,8 +227,21 @@ export function ProjectData({ data }:ProjectDataProps) {
                         Deletar
                     </button>
                 </div>
+                )}
             </div>
             <TaskModal isTaskModalOpen={isTaskModaLOpen} setIsTaskModalOpen={setIsTaskModalOpen} projectId={data?.data?.id} participants={data?.data?.participants} />
+            <EditProjectModal
+                isOpen={isEditOpen}
+                setIsOpen={setIsEditOpen}
+                project={data?.data}
+                onUpdated={() => onProjectUpdated?.()}
+            />
+            <ConfirmDeleteProjectModal
+                isOpen={isDeleteOpen}
+                setIsOpen={setIsDeleteOpen}
+                projectId={data?.data?.id}
+                onDeleted={() => window.location.href = "/dashboard"}
+            />
         </>
     )
 }

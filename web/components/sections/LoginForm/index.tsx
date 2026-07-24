@@ -20,7 +20,7 @@ export function LoginForm() {
                     className="w-20 object-cover" 
                     />
                     <h1 className="text-3xl font-semibold text-[#1F108E] mt-2">Kortex</h1>
-                    <p className="text-sm mt-2 text-[#464553] text-center">
+                    <p className="text-sm mt-2 text-[#464553] dark:text-gray-400 text-center">
                     Bem-vindo de volta à sua central de produtividade.
                     </p> 
                 </div>

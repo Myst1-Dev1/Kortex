@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from '../../../libs/redis/src/redis.service';
 import { Projects } from './entities/projects.entity';
@@ -19,6 +20,9 @@ export class ProjectsService {
   
     @InjectRepository(Projects)
         private readonly projectsRepository: Repository<Projects>,
+
+    @Inject('NOTIFICATIONS_CLIENT')
+        private readonly notifClient: ClientProxy,
   ) {}
 
    ping() {
@@ -268,6 +272,23 @@ export class ProjectsService {
       // Como o projeto mudou, limpamos o cache do Redis para o GET não trazer dados velhos
       await this.redisService.del(`projects:${projectId}`);
       await this.redisService.del('projects:all');
+
+      const memberIds = savedProject.participants.map((p) => p.id);
+      if (savedProject.author_id && !memberIds.includes(savedProject.author_id)) {
+        memberIds.push(savedProject.author_id);
+      }
+
+      try {
+        this.notifClient.emit('project.member.added', {
+          project_id: savedProject.id,
+          project_name: savedProject.name,
+          member_id: currentUser.id,
+          member_name: currentUser.name,
+          members: memberIds,
+        });
+      } catch (emitError: any) {
+        this.logger.warn(`Falha ao emitir project.member.added: ${emitError.message}`);
+      }
 
       this.logger.log(`Usuário ${currentUser.id} adicionado com sucesso ao projeto ${projectId}.`);
       return savedProject;

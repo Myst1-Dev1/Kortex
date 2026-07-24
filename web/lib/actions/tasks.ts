@@ -119,6 +119,7 @@ export async function updateTaskAction(
     name: formData.get("name") || undefined,
     description: formData.get("description") || undefined,
     time_estimated: formData.get("time_estimated") || undefined,
+    assigned_user_id: formData.get("assigned_user_id") || undefined,
   };
 
   const validated = UpdateTaskSchema.safeParse(raw);

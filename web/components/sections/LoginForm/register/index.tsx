@@ -54,7 +54,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                        <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                        <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                             <span className="text-xs">✉</span> Nome de usuário
                         </label>
                         <div className="relative">
@@ -67,7 +67,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                         </div>
                     </div>
                     <div className="space-y-1.5">
-                        <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                        <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                             <span className="text-xs">✉</span> E-mail
                         </label>
                         <div className="relative">
@@ -82,7 +82,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
-                        <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                        <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                             <span className="text-xs">🔒</span> Senha
                         </label>
                         <div className="relative flex items-center">
@@ -96,7 +96,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                         </div>
                     </div>
                     <div className="space-y-1.5">
-                        <label htmlFor="confirmPassword" className="flex items-center gap-1.5 text-sm font-medium text-[#464553]">
+                        <label htmlFor="confirmPassword" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
                             <span className="text-xs">🔒</span>Confirme a Senha
                         </label>
                         <div className="relative flex items-center">
@@ -131,7 +131,7 @@ export function Register({ setActiveForm }: RegisterProps) {
             </form>
 
             <div className="relative flex py-5 items-center justify-center">
-                <div className="text-center mt-8 text-sm text-gray-500">
+                <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
                     Já possui uma conta?{' '}
                     <span onClick={() => setActiveForm('login')} className="text-[#1F108E] font-medium cursor-pointer hover:underline">
                         Entrar

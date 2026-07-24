@@ -27,7 +27,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-8 dark:bg-[#0f0f1a]">
           <LoginForm />
         </div>
 

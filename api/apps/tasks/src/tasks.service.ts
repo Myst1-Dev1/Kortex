@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { RedisService } from 'libs/redis/src';
 import { Tasks } from './entities/tasks.entity';
 import { InjectRepository } from '@nestjs/typeorm/dist/common/typeorm.decorators';
@@ -17,6 +18,12 @@ export class TasksService {
     
       @InjectRepository(Tasks)
           private readonly tasksRepository: Repository<Tasks>,
+
+      @Inject('NOTIFICATIONS_CLIENT')
+          private readonly notifClient: ClientProxy,
+
+      @Inject('PROJECTS_CLIENT')
+          private readonly projectsClient: ClientProxy,
     ) {}
 
     ping() {
@@ -25,6 +32,32 @@ export class TasksService {
         service: 'tasks',
         now: new Date().toISOString(),
       };
+    }
+
+    private async getProjectMembers(projectId: string): Promise<string[]> {
+      try {
+        const { firstValueFrom } = await import('rxjs');
+        const project = await firstValueFrom(
+          this.projectsClient.send('projects.getById', { id: projectId }),
+        );
+        const participants: Array<{ id: string }> = project?.participants ?? [];
+        const memberIds = participants.map((p) => p.id);
+        if (project?.author_id && !memberIds.includes(project.author_id)) {
+          memberIds.push(project.author_id);
+        }
+        return memberIds;
+      } catch (error: any) {
+        this.logger.warn(`Falha ao buscar membros do projeto ${projectId}: ${error.message}`);
+        return [];
+      }
+    }
+
+    private async emitEvent(event: string, payload: Record<string, unknown>) {
+      try {
+        this.notifClient.emit(event, payload);
+      } catch (error: any) {
+        this.logger.warn(`Falha ao emitir evento ${event}: ${error.message}`);
+      }
     }
 
     async create(dto: CreateTaskDto) {
@@ -40,6 +73,26 @@ export class TasksService {
       await this.redisService.del(
         `tasks:project:${task.project_id}`,
       );
+
+      const members = await this.getProjectMembers(task.project_id);
+
+      await this.emitEvent('task.created', {
+        project_id: task.project_id,
+        task_id: task.id,
+        name: task.name,
+        author_id: task.task_author_id,
+        members,
+      });
+
+      if (task.assigned_user_id) {
+        await this.emitEvent('task.assigned', {
+          project_id: task.project_id,
+          task_id: task.id,
+          name: task.name,
+          assigned_user_id: task.assigned_user_id,
+          author_id: task.task_author_id,
+        });
+      }
 
       return task;
     }
@@ -128,6 +181,16 @@ export class TasksService {
         `tasks:project:${task.project_id}`,
       );
 
+      const members = await this.getProjectMembers(task.project_id);
+
+      await this.emitEvent('task.updated', {
+        project_id: task.project_id,
+        task_id: task.id,
+        name: task.name,
+        author_id: task.task_author_id,
+        members,
+      });
+
       return task;
     }
 
@@ -147,6 +210,7 @@ export class TasksService {
         );
       }
 
+      const oldStatus = task.status;
       task.status = status;
 
       if (time_concluded) {
@@ -160,6 +224,18 @@ export class TasksService {
       await this.redisService.del(
         `tasks:project:${task.project_id}`,
       );
+
+      const members = await this.getProjectMembers(task.project_id);
+
+      await this.emitEvent('task.status.changed', {
+        project_id: task.project_id,
+        task_id: task.id,
+        name: task.name,
+        old_status: oldStatus,
+        new_status: status,
+        author_id: userId,
+        members,
+      });
 
       return task;
     }
@@ -175,6 +251,8 @@ export class TasksService {
         );
       }
 
+      const members = await this.getProjectMembers(task.project_id);
+
       await this.tasksRepository.remove(task);
 
       await this.redisService.del(`tasks:${id}`);
@@ -182,6 +260,14 @@ export class TasksService {
       await this.redisService.del(
         `tasks:project:${task.project_id}`,
       );
+
+      await this.emitEvent('task.deleted', {
+        project_id: task.project_id,
+        task_id: task.id,
+        name: task.name,
+        author_id: task.task_author_id,
+        members,
+      });
 
       return {
         message: 'Task removida com sucesso.',
