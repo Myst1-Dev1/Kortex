@@ -11,6 +11,7 @@ import {
 import { useUser } from "@/services/user";
 import Image from "next/image";
 import { Check } from "lucide-react";
+import { TiptapEditor } from "@/components/ui/tiptap-editor";
 
 interface Participant {
   id: string;
@@ -140,19 +141,18 @@ export function EditTaskModal({
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="edit-task-description"
-                className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300"
-              >
-                Descrição
-              </label>
-              <textarea
-                id="edit-task-description"
-                name="description"
-                rows={4}
-                defaultValue={task.description ?? ""}
-                className="p-3 w-full outline-none rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 transition-all duration-500 focus-visible:ring-1 focus-visible:ring-zinc-400 resize-none"
-              />
+                <label htmlFor="edit-task-description"className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
+                    Descrição da tarefa
+                </label>
+                <div className="relative">
+                    <TiptapEditor 
+                        id="edit-task-description"
+                        name="description"
+                        height={150}
+                        content={task.description ?? ""}
+                        placeholder="Será um site com foco..."
+                    />
+                </div>
             </div>
 
             <div className="space-y-2">

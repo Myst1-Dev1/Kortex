@@ -118,7 +118,7 @@ export function ListTasks({ tasks, participants = [], onTaskChanged }: ListTasks
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-slate-900 dark:text-gray-100 text-base leading-tight group-hover:text-indigo-950 transition-colors">
+                      <h3 className="font-semibold text-slate-900 dark:text-gray-100 text-base leading-tight group-hover:text-blue-700 transition-colors">
                         {task.name}
                       </h3>
 

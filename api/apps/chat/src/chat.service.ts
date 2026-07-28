@@ -107,6 +107,11 @@ export class ChatService {
     this.logger.log(`Enviando mensagem no projeto ${dto.project_id} por ${dto.sender_id}`);
 
     try {
+      const members = await this.getProjectMembers(dto.project_id);
+      if (members.length > 0 && !members.includes(dto.sender_id)) {
+        throw new ForbiddenException('Você não é membro deste projeto.');
+      }
+
       let chat = await this.chatRepository.findOne({
         where: { project_id: dto.project_id },
       });
@@ -126,8 +131,6 @@ export class ChatService {
 
       await this.invalidateCache(chat.project_id);
 
-      const members = await this.getProjectMembers(chat.project_id);
-
       await this.emitEvent('chat.message.sent', {
         project_id: chat.project_id,
         message_id: saved.id,
@@ -139,7 +142,7 @@ export class ChatService {
       this.logger.log(`Mensagem enviada com sucesso! ID: ${saved.id}`);
       return saved;
     } catch (error: any) {
-      if (error instanceof BadRequestException) throw error;
+      if (error instanceof BadRequestException || error instanceof ForbiddenException) throw error;
 
       this.logger.error(
         `Falha ao enviar mensagem. Erro: ${error.message}`,

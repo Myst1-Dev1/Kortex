@@ -23,6 +23,9 @@ export class ProjectsService {
 
     @Inject('NOTIFICATIONS_CLIENT')
         private readonly notifClient: ClientProxy,
+
+    @Inject('CHAT_CLIENT')
+        private readonly chatClient: ClientProxy,
   ) {}
 
    ping() {
@@ -38,11 +41,11 @@ export class ProjectsService {
 
     try {
       // 1. Tenta buscar do cache do Redis
-      // const cachedProjects:any = await this.redisService.get(this.CACHE_KEY);
-      // if (cachedProjects) {
-      //   this.logger.log('Projetos recuperados do cache Redis.');
-      //   return JSON.parse(cachedProjects);
-      // }
+      const cachedProjects:any = await this.redisService.get(this.CACHE_KEY);
+      if (cachedProjects) {
+        this.logger.log('Projetos recuperados do cache Redis.');
+        return JSON.parse(cachedProjects);
+      }
 
       // 2. Se não tiver no cache, busca no banco
       const projects = await this.projectsRepository.find();
@@ -70,11 +73,11 @@ export class ProjectsService {
 
     try {
       // 1. Tenta buscar do cache do Redis
-      // const cachedProject:any = await this.redisService.get(cacheKey);
-      // if (cachedProject) {
-      //   this.logger.log(`Projeto com ID ${id} recuperado do cache Redis.`);
-      //   return JSON.parse(cachedProject);
-      // }
+      const cachedProject:any = await this.redisService.get(cacheKey);
+      if (cachedProject) {
+        this.logger.log(`Projeto com ID ${id} recuperado do cache Redis.`);
+        return JSON.parse(cachedProject);
+      }
 
       // 2. Se não tiver no cache, busca no banco
       const project = await this.projectsRepository.findOne({ where: { id } });
@@ -111,6 +114,12 @@ export class ProjectsService {
       const savedProject = await this.projectsRepository.save(projectInstance);
 
       this.logger.log(`Projeto criado com sucesso! ID: ${savedProject.id}`);
+
+      try {
+        this.chatClient.emit('chat.create', { project_id: savedProject.id });
+      } catch (emitError: any) {
+        this.logger.warn(`Falha ao emitir chat.create: ${emitError.message}`);
+      }
       
       return savedProject;
     } catch (error: any) {
@@ -138,6 +147,9 @@ export class ProjectsService {
 
       const updatedProject = Object.assign(project, data);
       const savedProject = await this.projectsRepository.save(updatedProject);
+
+      await this.redisService.del(this.CACHE_KEY);
+      await this.redisService.del(`projects:${id}`);
 
       this.logger.log(`Projeto atualizado com sucesso! ID: ${savedProject.id}`);
       

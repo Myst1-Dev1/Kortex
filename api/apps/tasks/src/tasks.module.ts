@@ -4,9 +4,8 @@ import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tasks } from './entities/tasks.entity';
-import { RedisModule } from 'libs/redis/src';
-import { ConfigModule } from '@nestjs/config/dist/config.module';
-import { ConfigService } from '@nestjs/config/dist/config.service';
+import { RedisModule } from '../../../libs/redis/src';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [

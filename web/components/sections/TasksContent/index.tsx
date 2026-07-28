@@ -70,7 +70,7 @@ export function TasksContent({ tasks, projectMap }: TasksContentProps) {
                 onClick={() => setStatusFilter("ALL")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                   statusFilter === "ALL"
-                    ? "border-[#1F108E] bg-[#1F108E]/5 text-[#1F108E]"
+                    ? "border-blue-500 bg-blue-500/5 text-blue-500"
                     : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
@@ -82,7 +82,7 @@ export function TasksContent({ tasks, projectMap }: TasksContentProps) {
                   onClick={() => setStatusFilter(s)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                     statusFilter === s
-                      ? "border-[#1F108E] bg-[#1F108E]/5 text-[#1F108E]"
+                      ? "border-blue-500 bg-blue-500/5 text-blue-500"
                       : "border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
                 >

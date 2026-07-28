@@ -13,11 +13,7 @@ describe('GatewayController', () => {
           provide: 'AUTH_CLIENT',
           useValue: {
             send: jest.fn().mockReturnValue(
-              of({
-                ok: true,
-                service: 'auth',
-                now: '2026-01-01T00:00:00.000Z',
-              }),
+              of({ ok: true, service: 'auth', now: '2026-01-01T00:00:00.000Z' }),
             ),
           },
         },
@@ -25,11 +21,31 @@ describe('GatewayController', () => {
           provide: 'MEDIA_CLIENT',
           useValue: {
             send: jest.fn().mockReturnValue(
-              of({
-                ok: true,
-                service: 'media',
-                now: '2026-01-01T00:00:00.000Z',
-              }),
+              of({ ok: true, service: 'media', now: '2026-01-01T00:00:00.000Z' }),
+            ),
+          },
+        },
+        {
+          provide: 'PROJECTS_CLIENT',
+          useValue: {
+            send: jest.fn().mockReturnValue(
+              of({ ok: true, service: 'projects', now: '2026-01-01T00:00:00.000Z' }),
+            ),
+          },
+        },
+        {
+          provide: 'TASKS_CLIENT',
+          useValue: {
+            send: jest.fn().mockReturnValue(
+              of({ ok: true, service: 'tasks', now: '2026-01-01T00:00:00.000Z' }),
+            ),
+          },
+        },
+        {
+          provide: 'CHAT_CLIENT',
+          useValue: {
+            send: jest.fn().mockReturnValue(
+              of({ ok: true, service: 'chat', now: '2026-01-01T00:00:00.000Z' }),
             ),
           },
         },
@@ -47,6 +63,9 @@ describe('GatewayController', () => {
       expect(result.gateway.service).toBe('gateway');
       expect(result.services.auth.ok).toBe(true);
       expect(result.services.media.ok).toBe(true);
+      expect(result.services.projects.ok).toBe(true);
+      expect(result.services.tasks.ok).toBe(true);
+      expect(result.services.chat.ok).toBe(true);
     });
   });
 });

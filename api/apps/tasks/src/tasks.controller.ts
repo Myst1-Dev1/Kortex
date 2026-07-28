@@ -3,7 +3,7 @@ import { MessagePattern } from '@nestjs/microservices';
 
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dtos/create-task.dto';
-import { UpdateTaskDto } from './dtos/uploaad-task.dto';
+import { UpdateTaskDto } from './dtos/upload-task.dto';
 
 @Controller()
 export class TasksController {

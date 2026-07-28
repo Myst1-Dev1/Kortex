@@ -18,6 +18,7 @@ import {
 import { useEffect, useRef } from "react";
 
 interface TiptapEditorProps {
+  id?: any;
   name: string;
   content?: string;
   placeholder?: string;

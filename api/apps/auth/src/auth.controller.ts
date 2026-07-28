@@ -27,6 +27,16 @@ export class AuthController {
     return this.authService.refreshToken(dto);
   }
 
+  @MessagePattern('auth.validateToken')
+  validateToken(@Payload() data: { userId: string }) {
+    return this.authService.validateToken(data.userId);
+  }
+
+  @MessagePattern('auth.logout')
+  logout(@Payload() data: { userId: string }) {
+    return this.authService.revokeSession(data.userId);
+  }
+
   @MessagePattern('auth.findUsersByIds')
   findUsersByIds(@Payload() data: { ids: string[] }) {
     return this.authService.findUsersByIds(data.ids);

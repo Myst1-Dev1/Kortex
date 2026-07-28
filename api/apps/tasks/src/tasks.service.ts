@@ -1,11 +1,11 @@
 import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { RedisService } from 'libs/redis/src';
+import { RedisService } from '../../../libs/redis/src';
 import { Tasks } from './entities/tasks.entity';
-import { InjectRepository } from '@nestjs/typeorm/dist/common/typeorm.decorators';
-import { Repository } from 'typeorm/browser/repository/Repository.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dtos/create-task.dto';
-import { UpdateTaskDto } from './dtos/uploaad-task.dto';
+import { UpdateTaskDto } from './dtos/upload-task.dto';
 
 @Injectable()
 export class TasksService {

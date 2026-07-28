@@ -108,7 +108,7 @@ export function ProjectsContent({ data }: ProjectsContentProps) {
                     ) : (
                       <span className="text-xs text-gray-300">Sem participantes</span>
                     )}
-                    <span className="text-xs font-medium text-[#1F108E] group-hover:underline">
+                    <span className="text-xs font-medium text-blue-500 group-hover:underline">
                       Ver →
                     </span>
                   </div>

@@ -27,7 +27,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const userCacheRef = useRef<Map<string, PublicUser>>(new Map());
+  const userCacheRef = useRef<Map<string, PublicUser | any>>(new Map());
   const [userCacheVersion, setUserCacheVersion] = useState(0);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -302,7 +302,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
                       >
                         <span
                           className={`block font-bold ${
-                            isMe ? "text-white" : "text-[#100752]"
+                            isMe ? "text-white" : "text-blue-600"
                           } mb-1`}
                         >
                           {isMe ? "Você" : sender?.name ?? "Usuário"}

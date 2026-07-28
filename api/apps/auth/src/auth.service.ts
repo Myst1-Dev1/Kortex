@@ -177,6 +177,11 @@ export class AuthService {
     await this.redisService.del(this.sessionKey(userId));
   }
 
+  async validateToken(userId: string): Promise<boolean> {
+    const session = await this.getSession(userId);
+    return !!session;
+  }
+
   async findUsersByIds(ids: string[]) {
     if (!ids.length) return [];
 

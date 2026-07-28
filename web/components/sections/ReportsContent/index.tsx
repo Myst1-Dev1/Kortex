@@ -82,7 +82,7 @@ export function ReportsContent({ tasks, projects }: ReportsContentProps) {
                 key={s.label}
                 className="bg-white dark:bg-gray-800 border border-[#F1F0F7] dark:border-gray-700 rounded-xl p-4 text-center shadow-sm"
               >
-                <p className="text-2xl font-bold text-[#1F108E]">{s.value}</p>
+                <p className="text-2xl font-bold text-blue-500">{s.value}</p>
                 <p className="text-xs text-gray-400 mt-1">{s.label}</p>
               </div>
             ))}

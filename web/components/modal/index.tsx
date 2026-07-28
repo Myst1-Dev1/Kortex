@@ -27,7 +27,7 @@ export function Modal({ maxWidth, isOpenModal, setIsOpenModal, children }: Modal
                     onClick={(e) => e.stopPropagation()}
                     className={`modal-body rounded-lg absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 p-3 ${maxWidth} w-full`}>
                     <div onClick={() => setIsOpenModal(false)} className="w-7 h-7 bg-[#1F108E] text-white grid place-items-center rounded-full absolute top-5 right-5 cursor-pointer transition-all duration-500 hover:bg-[#100752]">
-                        <XIcon className="w-6 h-6" />
+                        <XIcon className="w-5 h-5" />
                     </div>
                     
                     {children}

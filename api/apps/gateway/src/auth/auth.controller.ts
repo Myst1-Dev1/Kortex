@@ -8,6 +8,7 @@ import {
   Inject,
   Post,
   Query,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -98,6 +99,14 @@ export class AuthController {
     const idArray = ids.split(',').filter(Boolean);
     return firstValueFrom(
       this.authClient.send('auth.findUsersByIds', { ids: idArray }),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Req() req) {
+    return firstValueFrom(
+      this.authClient.send('auth.logout', { userId: req.user.userId }),
     );
   }
 }

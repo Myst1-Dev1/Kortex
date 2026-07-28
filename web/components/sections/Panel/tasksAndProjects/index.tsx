@@ -27,46 +27,56 @@ export function TasksAndProjects({ data }:TasksAndProjectsProps) {
         <>
             <div className="mt-10 grid grid-cols-2 gap-10 lg:gap-0 place-items-center lg:grid-cols-3 2xl:grid-cols-4">
                 {projectsList?.map((project: any) => (
-                    <div key={project.id} className="bg-white dark:bg-gray-800 border border-[#F1F0F7] dark:border-gray-700 shadow-sm max-w-80 w-full rounded-xl p-4">
-                        <div className="flex justify-between items-center w-full">
-                            <div className="w-10 h-10 rounded-md grid place-items-center bg-[#F5F4FA] dark:bg-gray-700"><Star className="text-[#1F108E] w-5 h-5" /></div>
-                            <span className="bg-[#F0FDF4] font-bold uppercase text-[#15803D] rounded-full py-2 px-5 border border-[#DCFCE7] text-sm">ativo</span>
+                    <Link
+                        key={project.id}
+                        href={`/project/${project.id}`}
+                        className="max-w-80 bg-white dark:bg-gray-800 border border-[#F1F0F7] dark:border-gray-700 shadow-sm rounded-xl p-5 hover:shadow-md hover:border-indigo-200 transition-all duration-300 group"
+                        >
+                        <div className="flex justify-between items-center mb-3">
+                            <div className="w-10 h-10 rounded-lg grid place-items-center bg-[#F5F4FA] dark:bg-gray-700 group-hover:bg-[#EAE8F2] transition-colors">
+                            <Star className="text-[#1F108E] w-5 h-5" />
+                            </div>
+                            <span className="bg-[#F0FDF4] font-bold uppercase text-[#15803D] rounded-full py-1 px-3 border border-[#DCFCE7] text-[10px]">
+                            ativo
+                            </span>
                         </div>
-                        <h3 className="text-xl font-semibold my-2 dark:text-gray-100">{project.name}</h3>
+
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 truncate">
+                            {project.name}
+                        </h3>
                         <div
-                            className="text-gray-400 dark:text-gray-500 text-sm font-light max-w-full break-words line-clamp-2"
+                            className="text-gray-400 dark:text-gray-500 text-sm font-light line-clamp-2 mb-4"
                             dangerouslySetInnerHTML={{ __html: project?.description ?? "" }}
                         />
-                        <div className="mt-10 border-t border-gray-200 dark:border-gray-700">
-                            <div className="mt-5 flex items-center justify-between">
-                               {project.participants && project.participants.length > 0 && (
-                                <div className="flex -space-x-2.5 items-center">
-                                    {project.participants.slice(0, 3).map((participant:any, index: number) => (
-                                    <Image
-                                        key={participant.id || index}
-                                        className="w-9 h-9 object-cover rounded-full border-2 border-white dynamic-z"
-                                        style={{ zIndex: index * 10 }} 
-                                        src={participant.avatarUrl || '/images/userImg.jpg'} 
-                                        width={32}
-                                        height={32}
-                                        alt={participant.name || "participante do projeto"}
-                                    />
-                                    ))}
 
-                                    {project.participants.length > 3 && (
-                                    <div 
-                                        className="w-9 h-9 rounded-full border-2 border-white bg-[#EAE8F2] flex items-center justify-center text-xs font-bold text-[#4A4A68]"
-                                        style={{ zIndex: 40 }}
-                                    >
-                                        +{project.participants.length - 3}
-                                    </div>
-                                    )}
+                        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex items-center justify-between">
+                            {project.participants && project.participants.length > 0 ? (
+                            <div className="flex -space-x-2">
+                                {project.participants.slice(0, 3).map((p: any, i: number) => (
+                                <Image
+                                    key={p.id || i}
+                                    className="w-7 h-7 rounded-full border-2 border-white object-cover"
+                                    style={{ zIndex: i * 10 }}
+                                    src={p.avatarUrl || "/images/userImg.jpg"}
+                                    width={28}
+                                    height={28}
+                                    alt={p.name || ""}
+                                />
+                                ))}
+                                {project.participants.length > 3 && (
+                                <div className="w-7 h-7 rounded-full border-2 border-white bg-[#EAE8F2] flex items-center justify-center text-[9px] font-bold text-[#4A4A68]">
+                                    +{project.participants.length - 3}
                                 </div>
                                 )}
-                                <Link href={`/project/${project.id}`} className="cursor-pointer p-3 font-bold text-base dark:text-blue-500 text-[#1F108E] border border-[#1F108E]/20 rounded-xl transition-all duration-500 hover:bg-[#100752] hover:text-white">Ver Projeto</Link>
                             </div>
+                            ) : (
+                            <span className="text-xs text-gray-300">Sem participantes</span>
+                            )}
+                            <span className="text-xs font-medium text-blue-500 group-hover:underline">
+                            Ver →
+                            </span>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </>

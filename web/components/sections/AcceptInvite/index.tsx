@@ -7,15 +7,22 @@ import { Spinner } from "@/components/ui/spinner";
 import { Check, X, Users, LogIn } from "lucide-react";
 
 interface AcceptInviteProps {
+    cookie: string | undefined;
     token: string;
     inviteInfo: InviteInfo | null;
     error: string | null;
 }
 
-export function AcceptInvite({ token, inviteInfo, error }: AcceptInviteProps) {
+export function AcceptInvite({ cookie, token, inviteInfo, error }: AcceptInviteProps) {
     const router = useRouter();
     const [isAccepting, setIsAccepting] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+
+      if(cookie === undefined) {
+        router.push('/');
+        alert('Você precisa estár logado pra aceitar um convite de projeto!');
+      }
 
     const handleAccept = async () => {
         if (isAccepting) return;

@@ -122,10 +122,10 @@ export async function createProjectAction(
   formData: FormData
 ): Promise<ProjectState> {
   const raw = {
-    author_id:formData.get("author_id"),
+    author_id: formData.get("author_id"),
     name: formData.get("name"),
-    description: formData.get("description"),
-    deadline_for_completion: formData.get("deadline_for_completion"),
+    description: formData.get("description") ?? undefined,
+    deadline_for_completion: formData.get("deadline_for_completion") ?? undefined,
   };
 
   const validated = CreateProjectSchema.safeParse(raw);
@@ -163,8 +163,8 @@ export async function updateProjectAction(
 ): Promise<ProjectState> {
   const raw = {
     name: formData.get("name"),
-    description: formData.get("description"),
-    deadline_for_completion: formData.get("deadline_for_completion"),
+    description: formData.get("description") ?? undefined,
+    deadline_for_completion: formData.get("deadline_for_completion") ?? undefined,
   };
 
   const validated = UpdateProjectSchema.safeParse(raw);
@@ -173,6 +173,8 @@ export async function updateProjectAction(
       validated.error.flatten().fieldErrors.name?.[0] ?? "Dados inválidos";
     return { success: false, error: message };
   }
+
+  console.log('dados:',validated.data);
 
   try {
     const res = await fetchWithAuth(`${API_URL}projects/${id}/update`, {
