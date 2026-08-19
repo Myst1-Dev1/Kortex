@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { signInAction } from "@/lib/actions/auth";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginProps {
     setActiveForm: any;
@@ -22,6 +23,12 @@ export function Login({ setActiveForm }: LoginProps) {
     
     const router = useRouter()
 
+    const [showPassword, setShowPassword] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword((prevState) => !prevState);
+    };
+
     async function handleLogin(prevState: any, formData: FormData) {
         const result = await signInAction(prevState, formData);
     
@@ -33,12 +40,13 @@ export function Login({ setActiveForm }: LoginProps) {
         
         return result;
     }
+
     return (
         <>
             <form action={formAction} className="w-full mt-7 space-y-5">
                 <div className="space-y-1.5">
                     <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                        <span className="text-xs">✉</span> E-mail
+                        <span className="text-xs"><Mail size={15} /></span> E-mail
                     </label>
                     <div className="relative">
                         <Input 
@@ -53,7 +61,7 @@ export function Login({ setActiveForm }: LoginProps) {
                 <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                     <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                    <span className="text-xs">🔒</span> Senha
+                    <span className="text-xs"><Lock size={15} /></span> Senha
                     </label>
                     <span className="text-[#1F108E] font-medium text-xs cursor-pointer hover:underline">
                     Esqueceu a senha?
@@ -63,10 +71,12 @@ export function Login({ setActiveForm }: LoginProps) {
                     <Input 
                     id="password" 
                     name="password" 
-                    type="password" 
+                    type={showPassword ? 'text' : 'password'} 
                     placeholder="••••••••" 
                     />
-                    <span className="absolute right-3 text-gray-500 cursor-pointer text-sm">👁</span>
+                    <span onClick={togglePasswordVisibility} className="absolute right-3 text-gray-500 cursor-pointer text-sm">
+                       {showPassword === true ? <EyeOff size={15} /> : <Eye size={15} /> } 
+                    </span>
                 </div>
                 </div>
 

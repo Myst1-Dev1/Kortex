@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RedisService } from '../../../libs/redis/src/redis.service';
 import { Projects } from './entities/projects.entity';
@@ -120,6 +120,8 @@ export class ProjectsService {
       } catch (emitError: any) {
         this.logger.warn(`Falha ao emitir chat.create: ${emitError.message}`);
       }
+
+      await this.redisService.del(this.CACHE_KEY);
       
       return savedProject;
     } catch (error: any) {
@@ -166,30 +168,33 @@ export class ProjectsService {
     }
   }
 
-  async deleteProject(id: string): Promise<void> {
+  async deleteProject(id: string): Promise<{ success: boolean; message: string }> {
     this.logger.log(`Tentando deletar projeto com ID: ${id}`);
 
     try {
       const project = await this.projectsRepository.findOne({ where: { id } });
 
       if (!project) {
-        this.logger.warn(`Projeto com ID ${id} não encontrado.`);
         throw new NotFoundException(`Projeto com ID ${id} não encontrado.`);
       }
 
       await this.projectsRepository.remove(project);
+
+      try {
+        await this.redisService.del(this.CACHE_KEY);
+        await this.redisService.del(`projects:${id}`);
+      } catch (cacheError: any) {
+        this.logger.error(`Falha ao limpar cache: ${cacheError.message}`);
+      }
+
       this.logger.log(`Projeto deletado com sucesso! ID: ${id}`);
+
+      return { success: true, message: 'Projeto deletado com sucesso.' };
+      
     } catch (error: any) {
       if (error instanceof NotFoundException) throw error;
-
-      this.logger.error(
-        `Falha ao deletar projeto com ID ${id}. Erro: ${error.message}`,
-        error.stack,
-      );
-
-      throw new InternalServerErrorException(
-        'Erro ao tentar deletar o projeto. Tente novamente mais tarde.',
-      );
+      
+      throw new RpcException(error.message || 'Erro ao deletar projeto.');
     }
   }
 

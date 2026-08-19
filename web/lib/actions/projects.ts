@@ -7,6 +7,7 @@ import {
   UpdateProjectSchema,
   InviteEmailSchema,
 } from "@/lib/schemas/projects";
+import { revalidatePath } from "next/cache";
 
 const API_URL = process.env.API_URL;
 
@@ -141,6 +142,8 @@ export async function createProjectAction(
       body: JSON.stringify(validated.data),
     });
 
+    console.log(validated.data);
+
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       return {
@@ -148,6 +151,8 @@ export async function createProjectAction(
         error: body?.message ?? "Erro ao criar projeto",
       };
     }
+
+    revalidatePath('/dashboard');
 
     const data = await res.json();
     return { success: true, data };
@@ -205,11 +210,12 @@ export async function deleteProjectAction(
       method: "DELETE",
     });
 
+    console.log('aqui', res);
+
     if (!res.ok) {
-      const body = await res.json().catch(() => null);
       return {
         success: false,
-        error: body?.message ?? "Erro ao deletar projeto",
+        error: "Erro ao deletar projeto",
       };
     }
 

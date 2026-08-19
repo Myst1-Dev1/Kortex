@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { deleteProjectAction } from "@/lib/actions/projects";
+import { useRouter } from "next/navigation";
 
 interface ConfirmDeleteProjectModalProps {
   isOpen: boolean;
@@ -21,15 +22,20 @@ export function ConfirmDeleteProjectModal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+
   const handleDelete = async () => {
     setPending(true);
     setError(null);
 
     const result = await deleteProjectAction(projectId);
 
-    if (result.success) {
+    console.log(result);
+
+    if (result.success === true) {
       setIsOpen(false);
       onDeleted();
+      router.push('/dashboard');
     } else {
       setError(result.error);
     }

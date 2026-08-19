@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { signUpAction } from "@/lib/actions/auth";
+import { Mail, Lock, Eye, User, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 interface RegisterProps {
@@ -19,6 +20,18 @@ const initialState = {
 export function Register({ setActiveForm }: RegisterProps) {
     const [state, formAction, pending] = useActionState(handleRegister, initialState);
     const [file, setFile] = useState<File | null>(null);
+
+    const [showPassword, setShowPassword] = useState({
+        password: false,
+        confirmPassword: false
+    });
+
+    function toggleShowPassword(field: keyof typeof showPassword) {
+        setShowPassword((prev) => ({
+        ...prev,                 
+        [field]: !prev[field],
+        }));
+    }
 
     async function handleRegister(prevState: any, data: FormData) {
         const result = await signUpAction(prevState, data);
@@ -55,7 +68,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                         <label htmlFor="name" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                            <span className="text-xs">✉</span> Nome de usuário
+                            <span className="text-xs"><User size={15} /></span> Nome de usuário
                         </label>
                         <div className="relative">
                             <Input 
@@ -68,7 +81,7 @@ export function Register({ setActiveForm }: RegisterProps) {
                     </div>
                     <div className="space-y-1.5">
                         <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                            <span className="text-xs">✉</span> E-mail
+                            <span className="text-xs"><Mail size={15} /></span> E-mail
                         </label>
                         <div className="relative">
                             <Input 
@@ -83,30 +96,34 @@ export function Register({ setActiveForm }: RegisterProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="space-y-1.5">
                         <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                            <span className="text-xs">🔒</span> Senha
+                            <span className="text-xs"><Lock size={15} /></span> Senha
                         </label>
                         <div className="relative flex items-center">
                             <Input 
                                 id="password" 
                                 name="password" 
-                                type="password" 
+                                type={showPassword.password ? 'text' : 'password'}  
                                 placeholder="••••••••" 
                             />
-                            <span className="absolute right-3 text-gray-500 cursor-pointer text-sm">👁</span>
+                            <span onClick={() => toggleShowPassword("password")} className="absolute right-3 text-gray-500 cursor-pointer text-sm">
+                                {showPassword.password === true ? <EyeOff size={15} /> : <Eye size={15} />}
+                            </span>
                         </div>
                     </div>
                     <div className="space-y-1.5">
                         <label htmlFor="confirmPassword" className="flex items-center gap-1.5 text-sm font-medium text-[#464553] dark:text-gray-300">
-                            <span className="text-xs">🔒</span>Confirme a Senha
+                            <span className="text-xs"><Lock size={15} /></span>Confirme a Senha
                         </label>
                         <div className="relative flex items-center">
                             <Input 
                                 id="confirmPassword" 
                                 name="confirmPassword" 
-                                type="password" 
+                                type={showPassword.confirmPassword ? 'text' : 'password'}  
                                 placeholder="••••••••" 
                             />
-                            <span className="absolute right-3 text-gray-500 cursor-pointer text-sm">👁</span>
+                            <span onClick={() => toggleShowPassword("confirmPassword")} className="absolute right-3 text-gray-500 cursor-pointer text-sm">
+                             {showPassword.confirmPassword === true ? <EyeOff size={15} /> : <Eye size={15} />}   
+                            </span>
                         </div>
                     </div>
                 </div>
