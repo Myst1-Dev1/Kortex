@@ -8,7 +8,7 @@ import { fetchWithAuth } from "@/lib/api";
 const API_URL = process.env.API_URL;
 
 const COOKIE_OPTIONS = {
-  httpOnly: true,
+  httpOnly: false,
   secure: true,
   sameSite: "lax" as const,
   path: "/",

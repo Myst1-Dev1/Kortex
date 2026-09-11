@@ -35,6 +35,22 @@ export class RedisService implements OnModuleDestroy {
     return (await this.client.exists(key)) === 1;
   }
 
+  async sadd(key: string, member: string): Promise<number> {
+    return await this.client.sadd(key, member);
+  }
+
+  async srem(key: string, member: string): Promise<number> {
+    return await this.client.srem(key, member);
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    return await this.client.smembers(key);
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    return await this.client.expire(key, seconds);
+  }
+
   onModuleDestroy() {
     void this.client.quit();
   }

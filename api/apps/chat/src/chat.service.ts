@@ -316,6 +316,60 @@ export class ChatService {
     }
   }
 
+  async joinVoiceRoom(projectId: string, userId: string): Promise<string[]> {
+    this.logger.log(`Usuário ${userId} tentando entrar na sala de voz do projeto ${projectId}`);
+
+    const members = await this.getProjectMembers(projectId);
+    if (members.length > 0 && !members.includes(userId)) {
+      throw new ForbiddenException('Você não é membro deste projeto.');
+    }
+
+    const cacheKey = `voice:room:${projectId}`;
+    let activeUsers = (await this.redisService.get<string[]>(cacheKey)) || [];
+
+    if (!activeUsers.includes(userId)) {
+      activeUsers.push(userId);
+
+      await this.redisService.set(cacheKey, activeUsers, 86400);
+    }
+
+    await this.emitEvent('chat.voice.user_joined', {
+      project_id: projectId,
+      user_id: userId,
+      active_users: activeUsers,
+    });
+
+    return activeUsers;
+  }
+
+  async leaveVoiceRoom(projectId: string, userId: string): Promise<string[]> {
+    this.logger.log(`Usuário ${userId} saindo da sala de voz do projeto ${projectId}`);
+
+    const cacheKey = `voice:room:${projectId}`;
+    let activeUsers = (await this.redisService.get<string[]>(cacheKey)) || [];
+
+    activeUsers = activeUsers.filter((id) => id !== userId);
+
+    if (activeUsers.length > 0) {
+      await this.redisService.set(cacheKey, activeUsers, 86400);
+    } else {
+      await this.redisService.del(cacheKey);
+    }
+
+    await this.emitEvent('chat.voice.user_left', {
+      project_id: projectId,
+      user_id: userId,
+      active_users: activeUsers,
+    });
+
+    return activeUsers;
+  }
+
+  async getVoiceRoomParticipants(projectId: string): Promise<string[]> {
+    const cacheKey = `voice:room:${projectId}`;
+    return (await this.redisService.get<string[]>(cacheKey)) || [];
+  }
+
   private async invalidateCache(chatId: string): Promise<void> {
     const keys = [
       `chat:${chatId}:latest:20`,

@@ -18,8 +18,6 @@ import { firstValueFrom } from 'rxjs';
 import {
   SendMessageDto,
   EditMessageDto,
-  GetPaginatedMessagesDto,
-  GetLatestMessagesDto,
 } from './dto/chatDto';
 
 @Controller('chat')
@@ -106,5 +104,24 @@ export class ChatController {
         limit: limit ? Number(limit) : undefined,
       }),
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('voice/participants/:projectId')
+  async getVoiceParticipants(
+    @Req() req,
+    @Param('projectId') projectId: string,
+  ) {
+    const participants = await firstValueFrom(
+      this.chatClient.send('chat.voice.participants', {
+        project_id: projectId,
+        sender_id: req.user.userId,
+      }),
+    );
+
+    return {
+      project_id: projectId,
+      participants,
+    };
   }
 }

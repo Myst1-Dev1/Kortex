@@ -44,4 +44,9 @@ export class ChatController {
   getLatestMessages(@Payload() dto: GetLatestMessagesDto) {
     return this.chatService.getLatestMessages(dto);
   }
+
+  @MessagePattern('chat.voice.participants')
+  getVoiceParticipants(@Payload() data: { project_id: string }) {
+    return this.chatService.getVoiceRoomParticipants(data.project_id);
+  }
 }

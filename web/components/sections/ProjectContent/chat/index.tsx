@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { MessageSquare, X, SendHorizontal, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, X, SendHorizontal, MoreHorizontal, Pencil, Trash2, Mic, MicOff, PhoneCall, PhoneOff, Volume2 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useUser } from "@/services/user";
 import {
@@ -12,11 +12,18 @@ import {
 import { getUsersByIdsAction, type PublicUser } from "@/lib/actions/auth";
 import { LoadingDots } from "@/components/ui/loadingDots";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { ScreenShare, type ScreenShareHandle } from "./ScreenShare";
 
 interface ChatProps {
   setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
   projectId: string;
 }
+
+const rtcConfig: RTCConfiguration = {
+  iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+  bundlePolicy: "max-bundle",
+  iceCandidatePoolSize: 10,
+};
 
 export function Chat({ setIsChatOpen, projectId }: ChatProps) {
   const { user } = useUser();
@@ -34,6 +41,16 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [isInVoice, setIsInVoice] = useState(false);
+  const [voiceParticipants, setVoiceParticipants] = useState<string[]>([]);
+  const [isMuted, setIsMuted] = useState(false);
+  
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const peersRef = useRef<{ [socketId: string]: RTCPeerConnection }>({});
+  const audioElementsRef = useRef<{ [socketId: string]: HTMLAudioElement }>({});
+  const pendingCandidatesRef = useRef<{ [socketId: string]: RTCIceCandidateInit[] }>({});
+  const screenShareRef = useRef<ScreenShareHandle>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,12 +119,190 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
     setMessages((prev) => prev.filter((m) => m.id !== data.messageId));
   }, []);
 
-  useChatSocket({
+  // --- Declaração do Hook ANTES das funções WebRTC que o utilizam ---
+  const { joinVoice, leaveVoice, sendVoiceSignal } = useChatSocket({
     projectId,
     onNewMessage: handleNewMessage,
     onEditMessage: handleEditMessage,
     onDeleteMessage: handleDeleteMessage,
+    onUserJoinedVoice: (data) => {
+      setVoiceParticipants(data.activeUsers);
+      if (localStreamRef.current) {
+        createPeerConnection(data.socketId, localStreamRef.current, false);
+      }
+      screenShareRef.current?.shareWith(data.socketId);
+    },
+    onUserLeftVoice: (data) => {
+      setVoiceParticipants(data.activeUsers);
+      
+      if (peersRef.current[data.socketId]) {
+        peersRef.current[data.socketId].close();
+        delete peersRef.current[data.socketId];
+      }
+
+      if (audioElementsRef.current[data.socketId]) {
+        audioElementsRef.current[data.socketId].pause();
+        delete audioElementsRef.current[data.socketId];
+      }
+    },
+    onVoiceParticipants: (data) => {
+      setVoiceParticipants(data.activeUsers);
+      if (localStreamRef.current) {
+        data.socketIds.forEach((socketId) => {
+          createPeerConnection(socketId, localStreamRef.current!, true);
+        });
+      }
+    },
+    onVoiceSignal: async (data) => {
+      const { senderSocketId, signal } = data;
+
+      if (signal.media === "screen") {
+        screenShareRef.current?.handleSignal(data);
+        return;
+      }
+
+      let pc = peersRef.current[senderSocketId];
+
+      if (!pc && localStreamRef.current) {
+        pc = createPeerConnection(senderSocketId, localStreamRef.current, false);
+      }
+
+      if (!pc) return;
+
+      if (signal.type === "offer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendVoiceSignal(senderSocketId, { type: "answer", sdp: pc.localDescription });
+      } else if (signal.type === "answer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+      } else if (signal.type === "candidate") {
+        if (signal.candidate) {
+          if (pc.remoteDescription) {
+            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          } else {
+            pendingCandidatesRef.current[senderSocketId] ??= [];
+            pendingCandidatesRef.current[senderSocketId].push(signal.candidate);
+          }
+        }
+      }
+
+      if (signal.type === "offer" || signal.type === "answer") {
+        const pendingCandidates = pendingCandidatesRef.current[senderSocketId] ?? [];
+        for (const candidate of pendingCandidates) {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+        delete pendingCandidatesRef.current[senderSocketId];
+      }
+    },
   });
+
+  // --- WebRTC & Callbacks de Voz ---
+  const createPeerConnection = useCallback((targetSocketId: string, stream: MediaStream, isInitiator: boolean) => {
+    if (peersRef.current[targetSocketId]) {
+      return peersRef.current[targetSocketId];
+    }
+
+    const pc = new RTCPeerConnection(rtcConfig);
+    peersRef.current[targetSocketId] = pc;
+
+    // Adiciona todas as tracks do microfone local ao peer
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
+
+    const opusCodec = RTCRtpSender.getCapabilities("audio")?.codecs.find(
+      (codec) => codec.mimeType.toLowerCase() === "audio/opus"
+    );
+    if (opusCodec) {
+      pc.getTransceivers()
+        .filter((transceiver) => transceiver.sender.track?.kind === "audio")
+        .forEach((transceiver) => transceiver.setCodecPreferences([opusCodec]));
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendVoiceSignal(targetSocketId, { type: "candidate", candidate: event.candidate });
+      }
+    };
+
+    // Captura o áudio do participante remoto
+    pc.ontrack = (event) => {
+      const remoteStream = event.streams[0];
+      
+      let audioEl = audioElementsRef.current[targetSocketId];
+      if (!audioEl) {
+        audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        audioElementsRef.current[targetSocketId] = audioEl;
+      }
+      
+      if (audioEl.srcObject !== remoteStream) {
+        audioEl.srcObject = remoteStream;
+        audioEl.play().catch((err) => console.error("Erro ao reproduzir áudio remoto:", err));
+      }
+    };
+
+    if (isInitiator) {
+      pc.createOffer()
+        .then((offer) => pc.setLocalDescription(offer))
+        .then(() => {
+          sendVoiceSignal(targetSocketId, { type: "offer", sdp: pc.localDescription });
+        })
+        .catch((err) => console.error("Erro ao criar offer:", err));
+    }
+
+    return pc;
+  }, [sendVoiceSignal]);
+
+  const cleanupVoice = () => {
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    localStreamRef.current = null;
+
+    Object.values(peersRef.current).forEach((pc) => pc.close());
+    peersRef.current = {};
+
+    Object.values(audioElementsRef.current).forEach((audio) => audio.pause());
+    audioElementsRef.current = {};
+    pendingCandidatesRef.current = {};
+
+    setIsInVoice(false);
+    setVoiceParticipants([]);
+  };
+
+  const toggleVoiceChat = async () => {
+    if (!isInVoice) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: false,
+            channelCount: { ideal: 1 },
+            sampleRate: { ideal: 48000 },
+          },
+        });
+        localStreamRef.current = stream;
+        setIsInVoice(true);
+        joinVoice();
+      } catch (err) {
+        console.error("Erro ao acessar microfone:", err);
+      }
+    } else {
+      cleanupVoice();
+      leaveVoice();
+    }
+  };
+
+  const toggleMute = () => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
+    }
+  };
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
@@ -222,13 +417,50 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
           <MessageSquare className="w-5 h-5 stroke-2" />
           <span className="font-bold text-sm tracking-wide">Chat do Projeto</span>
         </div>
-        <button
-          onClick={() => setIsChatOpen(false)}
-          className="cursor-pointer hover:bg-white/10 p-1 rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleVoiceChat}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium ${
+              isInVoice ? "bg-green-600 hover:bg-green-700 text-white" : "bg-white/10 hover:bg-white/20"
+            }`}
+            title={isInVoice ? "Sair da chamada de voz" : "Entrar na chamada de voz"}
+          >
+            {isInVoice ? <PhoneCall className="w-4 h-4 animate-pulse" /> : <PhoneOff className="w-4 h-4" />}
+            {voiceParticipants.length > 0 && <span className="text-[10px] bg-black/20 px-1.5 py-0.5 rounded-full">{voiceParticipants.length}</span>}
+          </button>
+
+          <button
+            onClick={() => setIsChatOpen(false)}
+            className="cursor-pointer hover:bg-white/10 p-1 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+
+      {isInVoice && (
+        <div className="bg-green-50 dark:bg-green-950/40 border-b border-green-200 dark:border-green-900 px-4 py-2 flex items-center justify-between text-xs text-green-800 dark:text-green-200">
+          <div className="flex items-center gap-1.5">
+            <Volume2 className="w-3.5 h-3.5 animate-bounce" />
+            <span>Canal de voz ativo ({voiceParticipants.length} online)</span>
+          </div>
+          <button
+            onClick={toggleMute}
+            className={`p-1 rounded-md transition-colors cursor-pointer ${
+              isMuted ? "bg-red-500 text-white" : "bg-green-200 dark:bg-green-800 text-green-900 dark:text-green-100"
+            }`}
+          >
+            {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      )}
+
+      <ScreenShare
+        ref={screenShareRef}
+        isInVoice={isInVoice}
+        getPeerIds={() => Object.keys(peersRef.current)}
+        sendSignal={sendVoiceSignal}
+      />
 
       <div className="flex-1 p-4 overflow-y-auto bg-white dark:bg-gray-900 flex flex-col gap-4 scrollbar-thin">
         {isLoadingMessages ? (
