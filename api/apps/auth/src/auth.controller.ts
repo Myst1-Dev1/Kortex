@@ -1,7 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { RefreshTokenResponse, SignInResponse, SignUpResponse } from './interfaces/auth-interfaces';
+import {
+  OAuthSignInPayload,
+  RefreshTokenResponse,
+  SignInResponse,
+  SignUpResponse,
+} from './interfaces/auth-interfaces';
 
 @Controller()
 export class AuthController {
@@ -20,6 +25,11 @@ export class AuthController {
   @MessagePattern('auth.signIn')
   signIn(@Payload() dto: SignInResponse) {
     return this.authService.signIn(dto);
+  }
+
+  @MessagePattern('auth.oauthSignIn')
+  oauthSignIn(@Payload() dto: OAuthSignInPayload) {
+    return this.authService.oauthSignIn(dto);
   }
 
   @MessagePattern('auth.refreshToken')

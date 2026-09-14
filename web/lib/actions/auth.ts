@@ -4,12 +4,13 @@ import { cookies } from "next/headers";
 import { LoginSchema, RegisterSchema } from "@/lib/schemas/auth";
 import { revalidatePath } from "next/cache";
 import { fetchWithAuth } from "@/lib/api";
+import { signIn as authSignIn, signOut as authSignOut } from "@/services/auth";
 
 const API_URL = process.env.API_URL;
 
 const COOKIE_OPTIONS = {
-  httpOnly: false,
-  secure: true,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
 };
@@ -158,11 +159,22 @@ export async function refreshSessionAction(): Promise<AuthState> {
   }
 }
 
+export async function signInWithOAuthAction(
+  provider: "google" | "github"
+): Promise<void> {
+  await authSignIn(provider, { redirectTo: "/dashboard" });
+}
+
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
   cookieStore.delete("user");
+  try {
+    await authSignOut({ redirect: false });
+  } catch {
+    // ignorar erro caso a sessão seja apenas por cookie JWT próprio
+  }
 }
 
 export interface PublicUser {

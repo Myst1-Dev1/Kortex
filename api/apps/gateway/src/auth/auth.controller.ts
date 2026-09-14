@@ -19,7 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { firstValueFrom } from 'rxjs';
 import type { Express } from 'express';
 import { SignUpDto } from './dto/signUpDto';
-import { SignInDto } from './dto/signInDto';
+import { SignInDto, OAuthSignInDto } from './dto/signInDto';
 import { RefreshTokenDto } from './dto/refreshTokenDto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -78,6 +78,16 @@ export class AuthController {
         email: body.email,
         password: body.password,
       }),
+    );
+  }
+
+  @Post('oauth')
+  async oauthSignIn(
+    @Body()
+    body: OAuthSignInDto
+  ) {
+    return firstValueFrom(
+      this.authClient.send('auth.oauthSignIn', body),
     );
   }
 

@@ -9,6 +9,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**', // Permite qualquer caminho dentro do Cloudinary
       },
+       {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**', // Permite qualquer caminho dentro do Cloudinary
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        port: '',
+        pathname: '/**', // Permite qualquer caminho dentro do Cloudinary
+      },
     ],
   },
 };

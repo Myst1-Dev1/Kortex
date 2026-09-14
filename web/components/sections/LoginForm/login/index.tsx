@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { signInAction } from "@/lib/actions/auth";
+import { signIn as nextAuthSignIn } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -24,6 +25,8 @@ export function Login({ setActiveForm }: LoginProps) {
     const router = useRouter()
 
     const [showPassword, setShowPassword] = useState(false);
+    const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
+    const [oauthError, setOauthError] = useState<string | null>(null);
 
     const togglePasswordVisibility = () => {
         setShowPassword((prevState) => !prevState);
@@ -39,6 +42,32 @@ export function Login({ setActiveForm }: LoginProps) {
         }
         
         return result;
+    }
+
+    async function handleOAuth(provider: "google" | "github") {
+        setOauthError(null);
+        setOauthLoading(provider);
+
+        try {
+            const result = await nextAuthSignIn(provider, {
+                callbackUrl: "/dashboard",
+                redirect: false,
+            });
+
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+
+            window.location.assign(result?.url ?? "/dashboard");
+        } catch (err) {
+            console.error("OAuth error:", err);
+
+            setOauthError(
+                "Falha ao iniciar login social. Tente novamente."
+            );
+
+            setOauthLoading(null);
+        }
     }
 
     return (
@@ -119,14 +148,38 @@ export function Login({ setActiveForm }: LoginProps) {
                 <div className="grow border-t border-gray-100"></div>
             </div>
 
+            {oauthError && (
+                <p className="text-sm text-red-500 text-center -mt-2 mb-2" role="alert">
+                    {oauthError}
+                </p>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                <Image src="/images/google-icon.png" alt="Google" width={16} height={16} />
-                Google
+                <button
+                    type="button"
+                    onClick={() => handleOAuth("google")}
+                    disabled={oauthLoading !== null || pending}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {oauthLoading === "google" ? (
+                        <Spinner size={16} />
+                    ) : (
+                        <Image src="/images/google-logo.webp" alt="Google" width={16} height={16} />
+                    )}
+                    Google
                 </button>
-                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                <Image src="/images/linkedin-icon.png" alt="LinkedIn" width={16} height={16} />
-                LinkedIn
+                <button
+                    type="button"
+                    onClick={() => handleOAuth("github")}
+                    disabled={oauthLoading !== null || pending}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {oauthLoading === "github" ? (
+                        <Spinner size={16} />
+                    ) : (
+                        <Image src="/images/github-logo.png" alt="Github" width={16} height={16} />
+                    )}
+                    Github
                 </button>
             </div>
 

@@ -13,3 +13,12 @@ export interface SignInResponse {
 export interface RefreshTokenResponse {
     refreshToken: string;
 }
+
+export interface OAuthSignInPayload {
+    provider: string;
+    providerAccountId: string;
+    email: string;
+    name?: string;
+    avatarUrl?: string;
+    emailVerified: boolean;
+}
