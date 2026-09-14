@@ -124,7 +124,7 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
             width: { ideal: 1920, max: 1920 },
             height: { ideal: 1080, max: 1080 },
           },
-          audio: false,
+          audio: true,
         });
 
         localStreamRef.current = stream;
@@ -173,6 +173,13 @@ export const ScreenShare = forwardRef<ScreenShareHandle, ScreenShareProps>(
         const peer = createPeer(senderSocketId, false);
         if (signal.type === "offer" && signal.sdp) {
           await peer.setRemoteDescription(signal.sdp);
+
+          const pendingCandidates = pendingCandidatesRef.current[senderSocketId] ?? [];
+          for (const candidate of pendingCandidates) {
+            await peer.addIceCandidate(candidate);
+          }
+          delete pendingCandidatesRef.current[senderSocketId];
+
           const answer = await peer.createAnswer();
           await peer.setLocalDescription(answer);
           sendSignal(senderSocketId, {
