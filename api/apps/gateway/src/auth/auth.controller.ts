@@ -22,7 +22,17 @@ import { SignUpDto } from './dto/signUpDto';
 import { SignInDto, OAuthSignInDto } from './dto/signInDto';
 import { RefreshTokenDto } from './dto/refreshTokenDto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiConsumes, 
+  ApiBody, 
+  ApiBearerAuth, 
+  ApiQuery 
+} from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -34,6 +44,27 @@ export class AuthController {
   ) {}
 
   @Post('sign-up')
+  @ApiOperation({ summary: 'Criar um novo usuário com avatar opcional' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Dados de cadastro e arquivo de imagem do avatar',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'João da Silva' },
+        email: { type: 'string', example: 'joao@email.com' },
+        password: { type: 'string', example: 'senha123F' },
+        avatar: {
+          type: 'string',
+          format: 'binary',
+          description: 'Arquivo de imagem do avatar',
+        },
+      },
+      required: ['name', 'email', 'password'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @UseInterceptors(FileInterceptor('avatar'))
   async signUp(
     @UploadedFile() avatar: Express.Multer.File,
@@ -69,6 +100,10 @@ export class AuthController {
   }
 
   @Post('sign-in')
+  @ApiOperation({ summary: 'Realizar login na aplicação' })
+  @ApiBody({ type: SignInDto })
+  @ApiResponse({ status: 200, description: 'Login realizado com sucesso, retorna os tokens.' })
+  @ApiResponse({ status: 401, description: 'Credenciais inválidas.' })
   async signIn(
     @Body()
     body: SignInDto
@@ -82,6 +117,9 @@ export class AuthController {
   }
 
   @Post('oauth')
+  @ApiOperation({ summary: 'Autenticação via OAuth' })
+  @ApiBody({ type: OAuthSignInDto })
+  @ApiResponse({ status: 200, description: 'Autenticação OAuth realizada com sucesso.' })
   async oauthSignIn(
     @Body()
     body: OAuthSignInDto
@@ -92,6 +130,9 @@ export class AuthController {
   }
 
   @Post('refresh-token')
+  @ApiOperation({ summary: 'Atualizar o token de acesso (Access Token)' })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiResponse({ status: 200, description: 'Novo token gerado com sucesso.' })
   async refreshToken(
     @Body()
     body: RefreshTokenDto
@@ -103,8 +144,13 @@ export class AuthController {
     );
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('users')
+  @ApiOperation({ summary: 'Buscar múltiplos usuários por IDs' })
+  @ApiQuery({ name: 'ids', description: 'IDs separados por vírgula (ex: id1,id2,id3)', example: '1,2,3' })
+  @ApiResponse({ status: 200, description: 'Lista de usuários retornada com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Não autorizado.' })
   async getUsersByIds(@Query('ids') ids: string) {
     const idArray = ids.split(',').filter(Boolean);
     return firstValueFrom(
@@ -112,8 +158,12 @@ export class AuthController {
     );
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('logout')
+  @ApiOperation({ summary: 'Encerrar sessão do usuário (Logout)' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Não autorizado.' })
   async logout(@Req() req) {
     return firstValueFrom(
       this.authClient.send('auth.logout', { userId: req.user.userId }),

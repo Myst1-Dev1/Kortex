@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { GatewayModule } from './gateway.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 import * as bodyParser from 'body-parser';
 
@@ -10,6 +11,17 @@ async function bootstrap() {
   const logger = new Logger('GatewayBootstrap');
 
   const app = await NestFactory.create(GatewayModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('')
+    .setDescription('')
+    .setVersion('1.0')
+    .addTag('Kortex api')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
 
   app.use(bodyParser.json({ limit: '5mb' }));
   app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
@@ -25,8 +37,8 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: true, // aceita qualquer origem (bom p/ dev)
-    credentials: true, // permite cookies / auth headers
+    origin: true,
+    credentials: true,
   });
 
   app.enableShutdownHooks();

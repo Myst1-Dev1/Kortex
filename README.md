@@ -1,12 +1,12 @@
 # Kortex
 
-Plataforma colaborativa para gerenciamento de projetos, tarefas e comunicação em tempo real.
-
-</div>
+Inspirado no Trello, o Kortex é uma plataforma de gerenciamento de projetos que permite criar, organizar e acompanhar projetos, atribuindo participantes e responsabilidades de forma prática e centralizada.
 
 ## Visão geral
 
-O Kortex reúne, em uma única aplicação, autenticação de usuários, gerenciamento de projetos, convites, tarefas, chat por projeto, notificações e recursos de mídia. O sistema é organizado como um monorepo com um frontend Next.js e um backend NestJS dividido em microsserviços.
+Imagine gerenciar uma equipe de 10 pessoas com 3 projetos diferentes em andamento. Com o Kortex, você pode criar e organizar cada projeto, definir os participantes e atribuir tarefas específicas para cada membro da equipe.
+
+Cada projeto possui seu próprio ambiente de comunicação, com chat de texto, chamadas de voz e compartilhamento de tela, permitindo que os participantes mantenham o foco, compartilhem ideias e colaborem de forma eficiente.
 
 ## Stack
 
@@ -18,6 +18,7 @@ O Kortex reúne, em uma única aplicação, autenticação de usuários, gerenci
 - **Cache e sessões:** Redis 7.
 - **Mídia:** Cloudinary para upload de avatares.
 - **Testes:** Jest no backend; Vitest, Testing Library e MSW no frontend.
+- **Documentação:** Swagger para documentar a API e permitir que os usuários explorem e testem cada endpoint diretamente pela interface.
 - **Logs:** Winston, com biblioteca compartilhada em `api/libs/logger`.
 
 ## Arquitetura
@@ -151,6 +152,7 @@ Implementadas ou disponíveis no fluxo atual:
 - Convites por link e aceite de convite.
 - Criação, listagem e atribuição de tarefas.
 - Chat por projeto com atualização em tempo real.
+- Chat de voz e compartilhamento de tela em cada projeto.
 - Editor de texto rico.
 - Upload de avatar.
 - Layout responsivo e animações com GSAP.
@@ -167,52 +169,6 @@ Principais páginas do frontend:
 | `/tasks` | Tarefas agregadas |
 | `/team` | Equipe e participantes |
 | `/reports` | Relatórios |
-
-## Testes e qualidade
-
-Backend:
-
-```bash
-cd api
-npm test
-npm run test:watch
-npm run test:cov
-npm run lint
-```
-
-Frontend:
-
-```bash
-cd web
-npm test
-npm run test:watch
-npm run lint
-```
-
-Builds:
-
-```bash
-cd api
-npm run build:gateway
-
-cd ../web
-npm run build
-npm run start
-```
-
-O script `api/npm run test:e2e` atualmente referencia `apps/api/test/jest-e2e.json`, embora essa aplicação não exista na estrutura observada. Portanto, o comando pode exigir ajuste antes de ser usado.
-
-## Estado atual e limitações conhecidas
-
-O projeto está em desenvolvimento. Entre os pontos documentados em [diagrams/feature-status.md](diagrams/feature-status.md):
-
-- Logout, login social e recuperação de senha ainda não estão completos na interface.
-- Edição e exclusão de projetos, tarefas e mensagens ainda não possuem todos os handlers de UI.
-- Alguns dados do dashboard e dos relatórios ainda são mockados ou hardcoded.
-- Notificações possuem serviço backend, mas a publicação de eventos e o push em tempo real ainda não estão completos.
-- O cache Redis é escrito em alguns fluxos, mas nem todos fazem leitura do cache.
-- `synchronize: true` do TypeORM e credenciais padrão do Compose são adequados apenas para desenvolvimento local.
-- A configuração atual de CORS e os fallbacks de segredos JWT devem ser endurecidos antes de qualquer ambiente de produção.
 
 ## Estrutura do repositório
 
@@ -231,12 +187,6 @@ web/
 diagrams/        Arquitetura, eventos, ER e status
 ```
 
-## Documentação adicional
+## Rota do swagger para testes
 
-- [Arquitetura](diagrams/architecture.md)
-- [Fluxo de eventos](diagrams/event-flow.md)
-- [Modelo entidade-relacionamento](diagrams/er-diagram.md)
-- [Status das funcionalidades](diagrams/feature-status.md)
-- [Análise de lacunas](diagrams/gap-analysis.md)
-- [Specs do backend](api/specs)
-- [Specs do frontend](web/specs)
+Acesse /docs
