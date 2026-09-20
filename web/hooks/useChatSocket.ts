@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { parseCookies } from 'nookies';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4002";
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "https://lab.mystdev.com.br";
 
 interface UseChatSocketOptions {
   projectId: string;
