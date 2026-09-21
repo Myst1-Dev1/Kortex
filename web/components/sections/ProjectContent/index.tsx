@@ -15,9 +15,10 @@ import { ProjectData } from "./projectData";
 interface ProjectContentProps {
     data: Project | any;
     tasks: any;
+    token: string | any;
 }
 
-export function ProjectContent({ data, tasks }:ProjectContentProps) {
+export function ProjectContent({ data, tasks, token }:ProjectContentProps) {
     const [isSideBarOpen, setIsSideBarOpen] = useState(false);
     const router = useRouter();
 
@@ -37,7 +38,7 @@ export function ProjectContent({ data, tasks }:ProjectContentProps) {
                     </div>
                 </main>
             </div>
-            <ChatBtn projectId={data?.data?.id ?? ""} />
+            <ChatBtn projectId={data?.data?.id ?? ""} token = {token} />
         </>
     )
 }

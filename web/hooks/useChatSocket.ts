@@ -4,9 +4,10 @@ import { useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { parseCookies } from 'nookies';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || "https://lab.mystdev.com.br";
+const SOCKET_URL = "https://lab.mystdev.com.br";
 
 interface UseChatSocketOptions {
+  token: string;
   projectId: string;
   onNewMessage?: (message: any) => void;
   onEditMessage?: (message: any) => void;
@@ -18,6 +19,7 @@ interface UseChatSocketOptions {
 }
 
 export function useChatSocket({
+  token,
   projectId,
   onNewMessage,
   onEditMessage,
@@ -51,17 +53,29 @@ export function useChatSocket({
 
   useEffect(() => {
     if (!projectId) return;
-    
-    const cookies = parseCookies();
-    const token = cookies.access_token;
 
     const socket = io(SOCKET_URL, {
-      auth: { token },
+      path: "/api/Kortex/api/socket.io/",
+      auth: {
+        token,
+      },
       withCredentials: true,
       transports: ["websocket", "polling"],
     });
 
     socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("🟢 SOCKET CONECTADO:", socket.id);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("🔴 SOCKET CONNECT ERROR:", error);
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("🟠 SOCKET DISCONNECT:", reason);
+    });
 
     socket.on("connect", () => {
       socket.emit("join_project", { projectId });

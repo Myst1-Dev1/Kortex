@@ -4,9 +4,10 @@ import { useState } from "react";
 
 interface ChatBtnProps {
   projectId: string;
+  token: string;
 }
 
-export function ChatBtn({ projectId }: ChatBtnProps) {
+export function ChatBtn({ projectId, token }: ChatBtnProps) {
     const [isChatOpen, setIsChatOpen] = useState(false);
 
     return (
@@ -18,7 +19,7 @@ export function ChatBtn({ projectId }: ChatBtnProps) {
                 <MessageSquareText className="w-6 h-6 stroke-2" />
                 <span>Abrir Chat</span>
             </button>
-            {isChatOpen && <Chat setIsChatOpen={setIsChatOpen} projectId={projectId} />}
+            {isChatOpen && <Chat setIsChatOpen={setIsChatOpen} projectId={projectId} token={token} />}
         </>
     );
 }

@@ -17,6 +17,7 @@ import { ScreenShare, type ScreenShareHandle } from "./ScreenShare";
 interface ChatProps {
   setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
   projectId: string;
+  token: string;
 }
 
 const rtcConfig: RTCConfiguration = {
@@ -25,7 +26,7 @@ const rtcConfig: RTCConfiguration = {
   iceCandidatePoolSize: 10,
 };
 
-export function Chat({ setIsChatOpen, projectId }: ChatProps) {
+export function Chat({ setIsChatOpen, projectId, token }: ChatProps) {
   const { user } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -121,6 +122,7 @@ export function Chat({ setIsChatOpen, projectId }: ChatProps) {
 
   // --- Declaração do Hook ANTES das funções WebRTC que o utilizam ---
   const { joinVoice, leaveVoice, sendVoiceSignal } = useChatSocket({
+    token,
     projectId,
     onNewMessage: handleNewMessage,
     onEditMessage: handleEditMessage,
