@@ -33,6 +33,9 @@ export class User {
   @Column({ type: 'varchar', default: 'free' })
   plan!: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'refresh_token' })
+  refreshToken?: string | null;
+
   @OneToMany(() => OAuthAccount, (oauthAccount) => oauthAccount.user)
   oauthAccounts?: OAuthAccount[];
 

@@ -97,7 +97,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.sockets.adapter.rooms.get(voiceRoom) ?? [],
       );
       
-      // Gerencia a sala de voz puramente via Redis no Gateway
+      // Gerencia a sala de voz in-memory no Gateway
       const activeUsers = await this.voiceService.joinVoiceRoom(data.projectId, userId);
 
       client.join(voiceRoom);

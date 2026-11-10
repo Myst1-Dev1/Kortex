@@ -1,6 +1,5 @@
 import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { RedisService } from '../../../libs/redis/src';
 import { Tasks } from './entities/tasks.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,12 +9,8 @@ import { UpdateTaskDto } from './dtos/upload-task.dto';
 @Injectable()
 export class TasksService {
     private readonly logger = new Logger(TasksService.name);
-    
-    private readonly CACHE_TTL = 3600;
 
     constructor(
-      private readonly redisService: RedisService,
-    
       @InjectRepository(Tasks)
           private readonly tasksRepository: Repository<Tasks>,
 
@@ -70,10 +65,6 @@ export class TasksService {
 
       await this.tasksRepository.save(task);
 
-      await this.redisService.del(
-        `tasks:project:${task.project_id}`,
-      );
-
       const members = await this.getProjectMembers(task.project_id);
 
       await this.emitEvent('task.created', {
@@ -100,15 +91,6 @@ export class TasksService {
     async findByProject(projectId: string) {
       this.logger.log(`Buscando tasks do projeto ${projectId}`);
 
-      const cacheKey = `tasks:project:${projectId}`;
-
-      const cached = await this.redisService.get<Tasks[]>(cacheKey);
-
-      if (cached) {
-        this.logger.debug(`Tasks do projeto ${projectId} encontradas no cache.`);
-        return cached;
-      }
-
       const tasks = await this.tasksRepository.find({
         where: {
           project_id: projectId,
@@ -118,28 +100,11 @@ export class TasksService {
         },
       });
 
-      await this.redisService.set(
-        cacheKey,
-        tasks,
-        this.CACHE_TTL,
-      );
-
-      this.logger.debug(`Tasks do projeto ${projectId} armazenadas no cache.`);
-
       return tasks;
     }
 
     async findOne(id: string) {
       this.logger.log(`Tentando buscar a task com id: ${id}`);
-
-      const cacheKey = `tasks:${id}`;
-
-      const cachedTask = await this.redisService.get<Tasks>(cacheKey);
-
-      if (cachedTask) {
-        this.logger.debug(`Task ${id} encontrada no cache.`);
-        return cachedTask;
-      }
 
       const task = await this.tasksRepository.findOne({
         where: { id },
@@ -148,10 +113,6 @@ export class TasksService {
       if (!task) {
         throw new NotFoundException('Task não encontrada');
       }
-
-      await this.redisService.set(cacheKey, task, this.CACHE_TTL);
-
-      this.logger.debug(`Task ${id} armazenada no cache.`);
 
       return task;
     }
@@ -174,12 +135,6 @@ export class TasksService {
       Object.assign(task, dto);
 
       await this.tasksRepository.save(task);
-
-      await this.redisService.del(`tasks:${id}`);
-
-      await this.redisService.del(
-        `tasks:project:${task.project_id}`,
-      );
 
       const members = await this.getProjectMembers(task.project_id);
 
@@ -219,12 +174,6 @@ export class TasksService {
 
       await this.tasksRepository.save(task);
 
-      await this.redisService.del(`tasks:${id}`);
-
-      await this.redisService.del(
-        `tasks:project:${task.project_id}`,
-      );
-
       const members = await this.getProjectMembers(task.project_id);
 
       await this.emitEvent('task.status.changed', {
@@ -254,12 +203,6 @@ export class TasksService {
       const members = await this.getProjectMembers(task.project_id);
 
       await this.tasksRepository.remove(task);
-
-      await this.redisService.del(`tasks:${id}`);
-
-      await this.redisService.del(
-        `tasks:project:${task.project_id}`,
-      );
 
       await this.emitEvent('task.deleted', {
         project_id: task.project_id,

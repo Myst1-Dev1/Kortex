@@ -10,7 +10,6 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RedisService } from '../../../libs/redis/src/redis.service';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
 import { SendMessageDto } from './dtos/send-message.dto';
@@ -23,11 +22,10 @@ import { IPaginatedMessages } from './interfaces/chat-interfaces';
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
-  private readonly CACHE_TTL = 3600;
   private readonly DEFAULT_LIMIT = 20;
+  private readonly voiceRooms = new Map<string, Set<string>>();
 
   constructor(
-    private readonly redisService: RedisService,
     @InjectRepository(Chat)
     private readonly chatRepository: Repository<Chat>,
     @InjectRepository(Message)
@@ -129,8 +127,6 @@ export class ChatService {
 
       const saved = await this.messageRepository.save(message);
 
-      await this.invalidateCache(chat.project_id);
-
       await this.emitEvent('chat.message.sent', {
         project_id: chat.project_id,
         message_id: saved.id,
@@ -160,7 +156,7 @@ export class ChatService {
     try {
       const message = await this.messageRepository.findOne({
         where: { id: dto.message_id },
-        relations: ['chat'],
+        relations: { chat: true },
       });
 
       if (!message) {
@@ -175,8 +171,6 @@ export class ChatService {
       message.edited = true;
 
       const saved = await this.messageRepository.save(message);
-
-      await this.invalidateCache(message.chat.project_id);
 
       this.logger.log(`Mensagem ${dto.message_id} editada com sucesso!`);
       return { ...saved, project_id: message.chat.project_id } as Message & { project_id: string };
@@ -201,7 +195,7 @@ export class ChatService {
     try {
       const message = await this.messageRepository.findOne({
         where: { id: messageId },
-        relations: ['chat'],
+        relations: { chat: true },
       });
 
       if (!message) {
@@ -214,8 +208,6 @@ export class ChatService {
 
       message.deleted = true;
       await this.messageRepository.save(message);
-
-      await this.invalidateCache(message.chat.project_id);
 
       this.logger.log(`Mensagem ${messageId} deletada com sucesso (soft delete)!`);
       return { message: 'Mensagem removida com sucesso.', project_id: message.chat.project_id };
@@ -273,20 +265,11 @@ export class ChatService {
   }
 
   async getLatestMessages(dto: GetLatestMessagesDto): Promise<Message[]> {
-    this.logger.log(`Buscando últimas mensagens do projeto ${dto.project_id} (cache-first)`);
+    this.logger.log(`Buscando últimas mensagens do projeto ${dto.project_id}`);
 
     const limit = dto.limit || this.DEFAULT_LIMIT;
-    const cacheKey = `chat:${dto.project_id}:latest:${limit}`;
 
     try {
-      const cached = await this.redisService.get<Message[]>(cacheKey);
-      if (cached) {
-        this.logger.log(`Mensagens recuperadas do cache Redis para o projeto ${dto.project_id}.`);
-        return cached;
-      }
-
-      this.logger.log(`Cache-miss para o projeto ${dto.project_id}, buscando no PostgreSQL.`);
-
       const chat = await this.chatRepository.findOne({
         where: { project_id: dto.project_id },
       });
@@ -301,9 +284,6 @@ export class ChatService {
         take: limit,
       });
 
-      await this.redisService.set(cacheKey, messages, this.CACHE_TTL);
-
-      this.logger.log(`Últimas ${messages.length} mensagens do projeto ${dto.project_id} salvas no cache.`);
       return messages;
     } catch (error: any) {
       this.logger.error(
@@ -324,14 +304,12 @@ export class ChatService {
       throw new ForbiddenException('Você não é membro deste projeto.');
     }
 
-    const cacheKey = `voice:room:${projectId}`;
-    let activeUsers = (await this.redisService.get<string[]>(cacheKey)) || [];
-
-    if (!activeUsers.includes(userId)) {
-      activeUsers.push(userId);
-
-      await this.redisService.set(cacheKey, activeUsers, 86400);
+    if (!this.voiceRooms.has(projectId)) {
+      this.voiceRooms.set(projectId, new Set<string>());
     }
+    const room = this.voiceRooms.get(projectId)!;
+    room.add(userId);
+    const activeUsers = Array.from(room);
 
     await this.emitEvent('chat.voice.user_joined', {
       project_id: projectId,
@@ -345,16 +323,14 @@ export class ChatService {
   async leaveVoiceRoom(projectId: string, userId: string): Promise<string[]> {
     this.logger.log(`Usuário ${userId} saindo da sala de voz do projeto ${projectId}`);
 
-    const cacheKey = `voice:room:${projectId}`;
-    let activeUsers = (await this.redisService.get<string[]>(cacheKey)) || [];
-
-    activeUsers = activeUsers.filter((id) => id !== userId);
-
-    if (activeUsers.length > 0) {
-      await this.redisService.set(cacheKey, activeUsers, 86400);
-    } else {
-      await this.redisService.del(cacheKey);
+    const room = this.voiceRooms.get(projectId);
+    if (room) {
+      room.delete(userId);
+      if (room.size === 0) {
+        this.voiceRooms.delete(projectId);
+      }
     }
+    const activeUsers = room ? Array.from(room) : [];
 
     await this.emitEvent('chat.voice.user_left', {
       project_id: projectId,
@@ -366,21 +342,7 @@ export class ChatService {
   }
 
   async getVoiceRoomParticipants(projectId: string): Promise<string[]> {
-    const cacheKey = `voice:room:${projectId}`;
-    return (await this.redisService.get<string[]>(cacheKey)) || [];
-  }
-
-  private async invalidateCache(chatId: string): Promise<void> {
-    const keys = [
-      `chat:${chatId}:latest:20`,
-      `chat:${chatId}:latest:50`,
-      `chat:${chatId}:latest:100`,
-    ];
-
-    for (const key of keys) {
-      await this.redisService.del(key);
-    }
-
-    this.logger.debug(`Cache invalidado para o chat ${chatId}`);
+    const room = this.voiceRooms.get(projectId);
+    return room ? Array.from(room) : [];
   }
 }

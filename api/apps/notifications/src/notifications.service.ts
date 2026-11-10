@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RedisService } from '../../../libs/redis/src/redis.service';
 import { Notification, NotificationType } from './entities/notification.entity';
 import { GetPaginatedNotificationsDto } from './dtos/get-paginated-notifications.dto';
 import { GetUnreadNotificationsDto } from './dtos/get-unread-notifications.dto';
@@ -20,11 +19,9 @@ import { IPaginatedNotifications } from './interfaces/notification-interfaces';
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  private readonly CACHE_TTL = 3600;
   private readonly DEFAULT_LIMIT = 20;
 
   constructor(
-    private readonly redisService: RedisService,
     @InjectRepository(Notification)
     private readonly notificationRepository: Repository<Notification>,
   ) {}
@@ -325,15 +322,7 @@ export class NotificationsService {
   async getPaginated(dto: GetPaginatedNotificationsDto): Promise<IPaginatedNotifications> {
     this.logger.log(`Buscando notificações paginadas para o usuário ${dto.user_id}`);
 
-    const cacheKey = `notifications:${dto.user_id}:paginated:${dto.limit || this.DEFAULT_LIMIT}:${dto.offset || 0}`;
-
     try {
-      const cached = await this.redisService.get<IPaginatedNotifications>(cacheKey);
-      if (cached) {
-        this.logger.log(`Notificações recuperadas do cache Redis para o usuário ${dto.user_id}.`);
-        return cached;
-      }
-
       const limit = dto.limit || this.DEFAULT_LIMIT;
       const offset = dto.offset || 0;
 
@@ -349,8 +338,6 @@ export class NotificationsService {
         total,
         hasMore: offset + limit < total,
       };
-
-      await this.redisService.set(cacheKey, result, this.CACHE_TTL);
 
       this.logger.log(`${notifications.length} notificações encontradas para o usuário ${dto.user_id}.`);
       return result;
@@ -368,21 +355,11 @@ export class NotificationsService {
   async getUnread(dto: GetUnreadNotificationsDto) {
     this.logger.log(`Buscando notificações não lidas para o usuário ${dto.user_id}`);
 
-    const cacheKey = `notifications:${dto.user_id}:unread`;
-
     try {
-      const cached = await this.redisService.get(cacheKey);
-      if (cached) {
-        this.logger.log(`Notificações não lidas recuperadas do cache Redis para o usuário ${dto.user_id}.`);
-        return cached;
-      }
-
       const notifications = await this.notificationRepository.find({
         where: { user_id: dto.user_id, read: false },
         order: { created_at: 'DESC' },
       });
-
-      await this.redisService.set(cacheKey, notifications, this.CACHE_TTL);
 
       this.logger.log(`${notifications.length} notificações não lidas encontradas para o usuário ${dto.user_id}.`);
       return notifications;
@@ -416,8 +393,6 @@ export class NotificationsService {
       notification.read = true;
       const saved = await this.notificationRepository.save(notification);
 
-      await this.invalidateCache(dto.user_id);
-
       this.logger.log(`Notificação ${dto.notification_id} marcada como lida com sucesso!`);
       return saved;
     } catch (error: any) {
@@ -443,8 +418,6 @@ export class NotificationsService {
         { user_id: dto.user_id, read: false },
         { read: true },
       );
-
-      await this.invalidateCache(dto.user_id);
 
       this.logger.log(`Todas as notificações do usuário ${dto.user_id} marcadas como lidas.`);
       return { message: 'Todas as notificações foram marcadas como lidas.' };
@@ -477,8 +450,6 @@ export class NotificationsService {
 
       await this.notificationRepository.remove(notification);
 
-      await this.invalidateCache(dto.user_id);
-
       this.logger.log(`Notificação ${dto.notification_id} deletada com sucesso!`);
       return { message: 'Notificação removida com sucesso.' };
     } catch (error: any) {
@@ -494,20 +465,5 @@ export class NotificationsService {
         'Erro ao tentar deletar a notificação. Tente novamente mais tarde.',
       );
     }
-  }
-
-  private async invalidateCache(userId: string): Promise<void> {
-    const keys = [
-      `notifications:${userId}:unread`,
-      `notifications:${userId}:paginated:20:0`,
-      `notifications:${userId}:paginated:50:0`,
-      `notifications:${userId}:paginated:100:0`,
-    ];
-
-    for (const key of keys) {
-      await this.redisService.del(key);
-    }
-
-    this.logger.debug(`Cache invalidado para o usuário ${userId}`);
   }
 }

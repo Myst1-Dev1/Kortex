@@ -15,7 +15,6 @@ Cada projeto possui seu próprio ambiente de comunicação, com chat de texto, c
 - **Mensageria:** RabbitMQ com NestJS Microservices.
 - **Tempo real:** Socket.IO e WebRTC.
 - **Persistência:** PostgreSQL 16.
-- **Cache e sessões:** Redis 7.
 - **Mídia:** Cloudinary para upload de avatares.
 - **Testes:** Jest no backend; Vitest, Testing Library e MSW no frontend.
 - **Documentação:** Swagger para documentar a API e permitir que os usuários explorem e testem cada endpoint diretamente pela interface.
@@ -38,7 +37,6 @@ O frontend (`web`) acessa o gateway HTTP e Socket.IO. O gateway (`api/apps/gatew
 Dependências locais:
 
 - PostgreSQL em `5432`, banco `kortex`.
-- Redis em `6379`.
 - RabbitMQ em `5672` e painel de gerenciamento em `15672`.
 - Cloudinary, serviço externo usado pela aplicação de mídia.
 
@@ -71,10 +69,6 @@ O backend usa as seguintes variáveis, entre outras configurações de conexão:
 
 ```env
 DATABASE_URI=postgresql://postgres:postgres@localhost:5432/kortex
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
-REDIS_DEFAULT_TTL=3600
 RABBITMQ_URI=amqp://guest:guest@localhost:5672
 
 AUTH_QUEUE=auth_queue
@@ -95,7 +89,7 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-Ao executar dentro do Compose, use os nomes dos serviços como host (`postgres`, `redis` e `rabbitmq`) em vez de `localhost`. Os segredos JWT devem ser valores fortes e exclusivos fora do ambiente local.
+Ao executar dentro do Compose, use os nomes dos serviços como host (`postgres` e `rabbitmq`) em vez de `localhost`. Os segredos JWT devem ser valores fortes e exclusivos fora do ambiente local.
 
 ### Variáveis do frontend
 
@@ -108,7 +102,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:4002
 
 ### Opção recomendada: Docker Compose
 
-O Compose inicia PostgreSQL, Redis, RabbitMQ e os sete serviços do backend:
+O Compose inicia PostgreSQL, RabbitMQ e os sete serviços do backend:
 
 ```bash
 cd api
@@ -130,7 +124,7 @@ Acesse:
 
 ### Executando a API sem Docker
 
-Com PostgreSQL, Redis e RabbitMQ disponíveis e o `.env` configurado, execute cada serviço em um terminal separado:
+Com PostgreSQL e RabbitMQ disponíveis e o `.env` configurado, execute cada serviço em um terminal separado:
 
 ```bash
 cd api

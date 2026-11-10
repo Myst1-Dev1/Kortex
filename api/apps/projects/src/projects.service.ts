@@ -1,7 +1,6 @@
 import { BadRequestException, ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RedisService } from '../../../libs/redis/src/redis.service';
 import { Projects } from './entities/projects.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -11,11 +10,7 @@ import { IParticipants, IProject } from './interfaces/project-interfaces';
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
 
-  private readonly CACHE_KEY = 'projects:all';
-  private readonly CACHE_TTL = 3600;
-  
   constructor(
-    private readonly redisService: RedisService,
     private readonly jwtService: JwtService,
   
     @InjectRepository(Projects)
@@ -40,20 +35,8 @@ export class ProjectsService {
     this.logger.log('Tentando buscar todos os projetos');
 
     try {
-      // 1. Tenta buscar do cache do Redis
-      const cachedProjects:any = await this.redisService.get(this.CACHE_KEY);
-      if (cachedProjects) {
-        this.logger.log('Projetos recuperados do cache Redis.');
-        return JSON.parse(cachedProjects);
-      }
-
-      // 2. Se não tiver no cache, busca no banco
       const projects = await this.projectsRepository.find();
       this.logger.log(`Foram encontrados ${projects.length} projetos no banco de dados.`);
-
-      // 3. Salva no Redis para as próximas requisições
-      await this.redisService.set(this.CACHE_KEY, JSON.stringify(projects), this.CACHE_TTL);
-      
       return projects;
     } catch (error: any) {
       this.logger.error(
@@ -69,27 +52,14 @@ export class ProjectsService {
 
   async getProjectById(id: string): Promise<Projects> {
     this.logger.log(`Tentando buscar projeto com ID: ${id}`);
-    const cacheKey = `projects:${id}`;
 
     try {
-      // 1. Tenta buscar do cache do Redis
-      const cachedProject:any = await this.redisService.get(cacheKey);
-      if (cachedProject) {
-        this.logger.log(`Projeto com ID ${id} recuperado do cache Redis.`);
-        return JSON.parse(cachedProject);
-      }
-
-      // 2. Se não tiver no cache, busca no banco
       const project = await this.projectsRepository.findOne({ where: { id } });
 
       if (!project) {
         this.logger.warn(`Projeto com ID ${id} não encontrado.`);
         throw new NotFoundException(`Projeto com ID ${id} não encontrado.`);
       }
-
-      // 3. Salva no Redis
-      this.logger.log(`Projeto com ID ${id} encontrado no banco. Salvando no cache.`);
-      await this.redisService.set(cacheKey, JSON.stringify(project), this.CACHE_TTL);
 
       return project;
     } catch (error: any) {
@@ -121,8 +91,6 @@ export class ProjectsService {
         this.logger.warn(`Falha ao emitir chat.create: ${emitError.message}`);
       }
 
-      await this.redisService.del(this.CACHE_KEY);
-      
       return savedProject;
     } catch (error: any) {
       this.logger.error(
@@ -150,9 +118,6 @@ export class ProjectsService {
       const updatedProject = Object.assign(project, data);
       const savedProject = await this.projectsRepository.save(updatedProject);
 
-      await this.redisService.del(this.CACHE_KEY);
-      await this.redisService.del(`projects:${id}`);
-
       this.logger.log(`Projeto atualizado com sucesso! ID: ${savedProject.id}`);
       
       return savedProject;
@@ -179,13 +144,6 @@ export class ProjectsService {
       }
 
       await this.projectsRepository.remove(project);
-
-      try {
-        await this.redisService.del(this.CACHE_KEY);
-        await this.redisService.del(`projects:${id}`);
-      } catch (cacheError: any) {
-        this.logger.error(`Falha ao limpar cache: ${cacheError.message}`);
-      }
 
       this.logger.log(`Projeto deletado com sucesso! ID: ${id}`);
 
@@ -282,13 +240,9 @@ export class ProjectsService {
 
     project.participants.push(newParticipant);
 
-    // 6. Salva no banco e Invalida os Caches do Redis!
+    // 6. Salva no banco
     try {
       const savedProject = await this.projectsRepository.save(project);
-      
-      // Como o projeto mudou, limpamos o cache do Redis para o GET não trazer dados velhos
-      await this.redisService.del(`projects:${projectId}`);
-      await this.redisService.del('projects:all');
 
       const memberIds = savedProject.participants.map((p) => p.id);
       if (savedProject.author_id && !memberIds.includes(savedProject.author_id)) {

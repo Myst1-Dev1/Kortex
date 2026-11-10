@@ -8,7 +8,7 @@ services:
 
     container_name: kortex_gateway
 
-    command: npm run start:gateway
+    command: node --max-old-space-size=128 dist/apps/gateway/main.js
 
     restart: always
 
@@ -26,9 +26,6 @@ services:
       postgres:
         condition: service_healthy
 
-      redis:
-        condition: service_healthy
-
       rabbitmq:
         condition: service_healthy
 
@@ -42,7 +39,7 @@ services:
 
     container_name: kortex_auth
 
-    command: npm run start:auth
+    command: node --max-old-space-size=128 dist/apps/auth/main.js
 
     restart: always
 
@@ -59,8 +56,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -74,7 +69,7 @@ services:
 
     container_name: kortex_projects
 
-    command: npm run start:projects
+    command: node --max-old-space-size=128 dist/apps/projects/main.js
 
     restart: always
 
@@ -91,8 +86,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -106,7 +99,7 @@ services:
 
     container_name: kortex_tasks
 
-    command: npm run start:tasks
+    command: node --max-old-space-size=128 dist/apps/tasks/main.js
 
     restart: always
 
@@ -123,8 +116,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -138,7 +129,7 @@ services:
 
     container_name: kortex_media
 
-    command: npm run start:media
+    command: node --max-old-space-size=128 dist/apps/media/main.js
 
     restart: always
 
@@ -155,8 +146,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -170,7 +159,7 @@ services:
 
     container_name: kortex_chat
 
-    command: npm run start:chat
+    command: node --max-old-space-size=128 dist/apps/chat/main.js
 
     restart: always
 
@@ -187,8 +176,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
@@ -202,7 +189,7 @@ services:
 
     container_name: kortex_notifications
 
-    command: npm run start:notifications
+    command: node --max-old-space-size=128 dist/apps/notifications/main.js
 
     restart: always
 
@@ -218,8 +205,6 @@ services:
 
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -254,28 +239,6 @@ services:
 
     networks:
       - kortex_network
-  redis:
-    image: redis:7-alpine
-
-    container_name: kortex_redis
-
-    restart: always
-
-    ports:
-      - '6379:6379'
-
-    volumes:
-      - redis_data:/data
-
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-
-    networks:
-      - kortex_network
-
   rabbitmq:
     image: rabbitmq:3-management
 
@@ -309,6 +272,5 @@ networks:
 
 volumes:
   postgres_data:
-  redis_data:
   rabbitmq_data:
 
